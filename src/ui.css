@@ -1,0 +1,65 @@
+/* Popup and options pages. Same font stack as AO3's default skin. */
+:root {
+  color-scheme: light dark;
+  --bg: #fff; --fg: #2a2a2a; --muted: #555; --line: #d4d4d4;
+  --accent: #6d2c5b; --btn: #f1f1f1; --btn-line: #b8b8b8; --warn: #8a4b00;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1f1f1f; --fg: #ececec; --muted: #b8b8b8; --line: #444;
+    --accent: #e7a9d5; --btn: #2d2d2d; --btn-line: #5a5a5a; --warn: #ffc27a;
+  }
+}
+body {
+  margin: 0;
+  font: 100%/1.5 'Lucida Grande', 'Lucida Sans Unicode', 'GNU Unifont', Verdana, Helvetica, sans-serif;
+  color: var(--fg);
+  background: var(--bg);
+}
+h1, h2 { color: var(--accent); font-weight: normal; line-height: 1.25; }
+a { color: var(--accent); }
+button {
+  font: inherit; font-size: 0.9375em; color: var(--fg); background: var(--btn);
+  border: 1px solid var(--btn-line); border-radius: 0.25em; padding: 0.3em 0.8em;
+  min-height: 2.25em; cursor: pointer;
+}
+button:hover { border-color: var(--fg); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+input[type="checkbox"] { width: 1.15em; height: 1.15em; margin: 0; accent-color: var(--accent); }
+.check { display: inline-flex; align-items: center; gap: 0.45em; cursor: pointer; }
+.hint, .note { color: var(--muted); font-size: 0.875em; }
+.warn { color: var(--warn); }
+footer { font-size: 0.8125em; }
+
+/* Popup */
+.popup { width: 18.5rem; padding: 0.75rem 1rem; }
+.popup .top { display: flex; align-items: center; justify-content: space-between; gap: 1em; }
+.popup h1 { font-size: 1.125em; margin: 0; }
+.counts { margin: 0.75em 0; }
+.counts div { display: flex; justify-content: space-between; padding: 0.3em 0; border-bottom: 1px solid var(--line); }
+.counts dt { margin: 0; }
+.counts dd { margin: 0; font-weight: bold; }
+.popup footer { margin-top: 0.75em; padding-top: 0.5em; border-top: 1px solid var(--line); text-align: right; }
+
+/* Options */
+.options main { max-width: 44rem; margin: 0 auto; padding: 1rem 1rem 2rem; }
+.options h1 { font-size: 1.75em; margin: 0.5em 0 0.25em; }
+.options h2 { font-size: 1.25em; margin: 0 0 0.25em; }
+.options section { border-top: 1px solid var(--line); padding: 1em 0 1.25em; }
+.options p { margin: 0.4em 0; }
+.names { list-style: none; margin: 0.5em 0; padding: 0; }
+.names li {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5em;
+  padding: 0.3em 0; border-bottom: 1px solid var(--line);
+}
+.names li > span { overflow-wrap: anywhere; }
+.names li > span:only-child { color: var(--muted); font-style: italic; }
+.names .actions { display: flex; gap: 0.5em; align-items: center; }
+select { font: inherit; font-size: 0.9375em; color: var(--fg); background: var(--btn); border: 1px solid var(--btn-line); border-radius: 0.25em; min-height: 2.25em; }
+.add { display: grid; gap: 0.35em; margin-top: 0.5em; }
+.add label { font-weight: bold; }
+textarea { font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--btn-line); border-radius: 0.25em; padding: 0.35em; width: 100%; box-sizing: border-box; }
+.add button { justify-self: start; }
+.row { display: flex; flex-wrap: wrap; gap: 0.5em; align-items: center; }
+.status:empty { display: none; }
+.options footer { max-width: 44rem; margin: 0 auto; padding: 0 1rem 1.5rem; }

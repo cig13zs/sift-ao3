@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sift for AO3</title>
+<meta name="description" content="A browser extension for AO3: excluded tags that stay on, muted authors when logged out, and only fics where your ship comes first.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <h1>Sift for AO3</h1>
+  <p class="lede">A browser extension for reading on Archive of Our Own. It keeps your
+  excluded tags on for every listing and search, mutes authors even when you're logged
+  out, and on a ship's works page it can fold away the fics where that ship is only a
+  side pairing.</p>
+
+  <div class="buttons">
+    <a class="primary" href="https://github.com/cig13zs/sift-ao3/releases/latest">Download</a>
+    <a href="https://github.com/cig13zs/sift-ao3">Source on GitHub</a>
+    <a href="https://ko-fi.com/jju1s">Support on Ko-fi</a>
+  </div>
+
+  <img src="primary-ship.png" width="1280" height="800"
+    alt="A ship's works page with the Sift bar: 3 of 10 works hidden because the ship isn't listed first">
+
+  <h2>Your ship first</h2>
+  <p>On a relationship tag's works page, tick "Only works where this ship is listed
+  first". Works where the ship is a background pairing shrink to one line with a Show
+  button. Sift reads AO3's own list of other names for the ship, so a reversed pairing
+  still counts. There's a looser "first two relationship tags" option too.</p>
+
+  <h2>Excluded tags that stay excluded</h2>
+  <p>AO3's filter sidebar forgets your excluded tags when you open another tag or search.
+  Exclude a tag once, from any work's Sift panel or the options page, and every AO3
+  listing you open from then on leaves it out. Sift adds the tag to AO3's own filter, so
+  synonym tags are excluded too and pages stay full.</p>
+
+  <img src="exclude-panel.png" width="1280" height="800" loading="lazy"
+    alt="The Sift panel on a work, with Exclude next to each tag and Mute next to the author">
+
+  <h2>Muted authors</h2>
+  <p>Mute an author and their works fold away on every listing, under every pseud,
+  without an AO3 account.</p>
+
+  <h2>Install</h2>
+  <p>The Chrome Web Store and Firefox Add-ons listings are in review. Until they're up,
+  download <code>sift-ao3-1.0.0-chrome.zip</code> from the
+  <a href="https://github.com/cig13zs/sift-ao3/releases/latest">latest release</a>, unzip
+  it, open <code>chrome://extensions</code>, turn on Developer mode and choose "Load
+  unpacked".</p>
+
+  <h2>Privacy</h2>
+  <p>Your lists are saved only in your browser and never sent to me. Sift has no account,
+  no server and no analytics. It talks to one website, AO3. Details are in the
+  <a href="privacy.html">privacy policy</a>.</p>
+
+  <footer>
+    <p>Sift is free and MIT licensed. If it makes AO3 nicer to browse,
+    <a href="https://ko-fi.com/jju1s">a coffee on Ko-fi</a> keeps it maintained.</p>
+    <p>Sift is an unofficial project. It isn't affiliated with the Organization for
+    Transformative Works or Archive of Our Own.</p>
+  </footer>
+</main>
+</body>
+</html>

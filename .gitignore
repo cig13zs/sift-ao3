@@ -1,0 +1,9 @@
+node_modules/
+dist/
+tests/screenshots/
+
+# Build notes for the lead; they stay on this machine
+BUILD-PROMPT.md
+BUILD-REPORT.md
+PROGRESS.md
+_archive/

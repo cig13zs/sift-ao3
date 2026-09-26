@@ -1,0 +1,16 @@
+{
+  "name": "sift-ao3",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Make your AO3 filters stick: excluded tags on every search, muted authors, and only fics where your ship comes first.",
+  "license": "MIT",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test tests/",
+    "build": "node build.mjs",
+    "e2e": "node tests/e2e.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.61.0"
+  }
+}

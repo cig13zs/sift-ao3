@@ -1,0 +1,82 @@
+/* Sift inherits AO3's fonts, colours and button styles, and draws its borders from currentColor,
+   so it reads correctly in the default skin, Reversi, and other site skins. */
+html.sift-off .sift-ui,
+.sift-ui[hidden],
+.sift-ui [hidden] { display: none !important; }
+
+.sift-bar {
+  margin: 0.75em 0 1em;
+  padding: 0.5em 0.75em;
+  border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+  border-radius: 0.25em;
+  clear: left;
+}
+.sift-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35em 0.75em;
+  margin: 0.25em 0;
+}
+.sift-note { font-size: 0.875em; }
+.sift-check { display: inline-flex; align-items: center; gap: 0.35em; cursor: pointer; }
+.sift-check input { margin: 0; width: 1.1em; height: 1.1em; }
+.sift-card {
+  padding: 0.5em 0;
+  border-top: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+}
+
+.sift-btn {
+  font: inherit;
+  font-size: 0.875em;
+  min-height: 2em;
+  cursor: pointer;
+}
+a.sift-btn { display: inline-flex; align-items: center; }
+.sift-btn:focus-visible,
+.sift-check input:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.sift-btn[aria-pressed="true"] { font-weight: bold; }
+
+/* The Sift button sits at the end of the blurb header, clear of AO3's date and symbols. */
+.sift-open { float: right; margin: 0.25em 0 0 0.5em; }
+
+li.blurb.sift-collapsed > :not(.sift-hidebar) { display: none !important; }
+li.blurb.sift-collapsed { min-height: 0 !important; padding-top: 0.25em !important; padding-bottom: 0.25em !important; }
+li.blurb.sift-removed { display: none !important; }
+.sift-hidebar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35em 0.75em;
+  font-size: 0.875em;
+  font-style: italic;
+}
+li.blurb:not(.sift-collapsed) > .sift-hidebar {
+  margin-bottom: 0.5em;
+  padding-bottom: 0.25em;
+  border-bottom: 1px dashed color-mix(in srgb, currentColor 30%, transparent);
+}
+.sift-hidebar .sift-btn { font-style: normal; }
+
+.sift-panel {
+  clear: both;
+  margin: 0.5em 0;
+  padding: 0.5em 0.75em;
+  border: 1px dashed color-mix(in srgb, currentColor 40%, transparent);
+  border-radius: 0.25em;
+}
+.sift-panel .sift-label { margin: 0.5em 0 0.2em; font-weight: bold; }
+.sift-panel ul.sift-list { list-style: none; margin: 0; padding: 0; }
+.sift-panel ul.sift-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75em;
+  margin: 0;
+  padding: 0.15em 0;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+}
+.sift-name { overflow-wrap: anywhere; }
+.sift-status { margin: 0.25em 0; font-size: 0.875em; }
+.sift-status:empty { display: none; }

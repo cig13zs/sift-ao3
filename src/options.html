@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sift for AO3 options</title>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body class="options">
+<main>
+  <h1>Sift for AO3</h1>
+  <p class="hint">Sift saves everything on this page in this browser only. It has no account, no server and no tracking.</p>
+
+  <section aria-labelledby="h-exclusions">
+    <h2 id="h-exclusions">Saved exclusions</h2>
+    <p>Tags left out of every AO3 listing and search you open. Sift adds them to AO3's own filter, so tags with the same meaning are excluded too and each page stays full.</p>
+    <ul id="exclusions" class="names" aria-labelledby="h-exclusions"></ul>
+    <form class="add" data-list="exclusions">
+      <label for="add-exclusions">Add tags</label>
+      <textarea id="add-exclusions" rows="2" placeholder="One per line, or separated by commas"></textarea>
+      <button type="submit">Add</button>
+      <p class="status hint" role="status"></p>
+    </form>
+  </section>
+
+  <section aria-labelledby="h-muted">
+    <h2 id="h-muted">Muted authors</h2>
+    <p>Works by these AO3 users collapse on every listing, whichever pseud they post under. If you log in to AO3, its own muting (in your AO3 preferences) works too.</p>
+    <ul id="mutedAuthors" class="names" aria-labelledby="h-muted"></ul>
+    <form class="add" data-list="mutedAuthors">
+      <label for="add-mutedAuthors">Add AO3 user names</label>
+      <textarea id="add-mutedAuthors" rows="2" placeholder="One per line, or separated by commas"></textarea>
+      <button type="submit">Add</button>
+      <p class="status hint" role="status"></p>
+    </form>
+  </section>
+
+  <section aria-labelledby="h-ships">
+    <h2 id="h-ships" tabindex="-1">Saved ships</h2>
+    <p>The primary ship filter turns on by itself on these relationship tag pages. To add one, open the ship's works page and tick "Only works where this ship is listed first" in the Sift bar.</p>
+    <ul id="ships" class="names" aria-labelledby="h-ships"></ul>
+  </section>
+
+  <section aria-labelledby="h-behaviour">
+    <h2 id="h-behaviour">Behaviour</h2>
+    <p><label class="check"><input type="checkbox" id="autoApply"> Always apply my exclusions automatically</label></p>
+    <p class="hint">When a listing opens without them (a typed address or an outside link), Sift reloads it once with your exclusions. It never reloads the same page twice, and never after you use AO3's own filter form.</p>
+    <p><label class="check"><input type="checkbox" id="removeHidden"> Remove hidden works entirely instead of collapsing them</label></p>
+  </section>
+
+  <section aria-labelledby="h-backup">
+    <h2 id="h-backup">Back up and move</h2>
+    <p>Export saves your lists and settings as a JSON file. Import adds a backup to what you already have; it never removes anything.</p>
+    <p class="row">
+      <button type="button" id="export">Export JSON</button>
+      <button type="button" id="import-button">Import JSON</button>
+      <input type="file" id="import" accept="application/json,.json" hidden>
+    </p>
+    <p class="status hint" id="io-status" role="status"></p>
+    <p class="hint">Moving from AO3 Savior or AO3 Enhancements? Copy their tag and author lists into the boxes above. Quotes and brackets are ignored, and wildcard entries such as *mimic are skipped because AO3's filter needs exact tag names.</p>
+  </section>
+</main>
+<footer><a href="https://ko-fi.com/jju1s" target="_blank" rel="noopener noreferrer">Support on Ko-fi</a></footer>
+<script src="lib/sift.js"></script>
+<script src="options.js"></script>
+</body>
+</html>
