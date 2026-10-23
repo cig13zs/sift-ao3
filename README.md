@@ -27,6 +27,12 @@ tags into the options page. After that, every link on AO3 that leads to a listin
 pages, searches, a user's works, bookmarks) carries your exclusions and AO3 does the
 filtering itself. Synonym tags get excluded along with the tag, and pages stay full.
 
+The same goes for AO3's other sidebar filters. Pick complete works only, a language,
+no crossovers or a word count range in AO3's sidebar, press Sort and Filter, then press
+"Keep on every listing" in the Sift bar. From then on every work listing and search you
+open uses them too, until you remove them on the options page. A filter you change in
+AO3's sidebar for one search still wins for that search.
+
 If you land on a listing some other way, like a bookmark in your browser, the Sift bar
 offers "Apply my filters". Turn on "always apply automatically" in the options and Sift
 does it for you, once per page.
@@ -69,7 +75,8 @@ become AO3 filters, so Sift skips those and tells you how many it skipped.
 ## Limits
 
 - Exclusions work where AO3 can filter: tag works pages, searches, users' works and
-  bookmarks. Series pages aren't filtered.
+  bookmarks. Series pages aren't filtered. Kept sidebar filters (complete, language,
+  crossovers, word count) apply to work listings and searches, not bookmarks.
 - For the biggest ships, AO3's tag page may not list every alternative name. A work
   tagged with a rare one can fold by mistake, and it's still one click away.
 - If AO3 changes its page layout, Sift may stop reading it. The toolbar popup says so

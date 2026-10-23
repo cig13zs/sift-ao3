@@ -1,6 +1,6 @@
-# Store listing: Sift for AO3 1.0.0
+# Store listing: Sift for AO3 1.1.0
 
-Both packages are on the v1.0.0 GitHub release. The title and summary come from each
+Both packages come from `node build.mjs` (`dist/sift-ao3-1.1.0-chrome.zip` and `-firefox.zip`). The title and summary come from each
 package's manifest, so there's nothing to type for them.
 
 ## Description (both stores)
@@ -19,6 +19,10 @@ package's manifest, so there's nothing to type for them.
 > the tag to AO3's own filter, so synonym tags are excluded too and every page stays
 > full.
 >
+> Sidebar filters that stay put. Choose complete works only, a language, no crossovers
+> or a word count range in AO3's sidebar once, press "Keep on every listing", and every
+> work listing and search you open uses them too.
+>
 > Muted authors. Mute an author and their works fold away on every listing, under every
 > pseud, even when you're logged out.
 >
@@ -30,7 +34,7 @@ package's manifest, so there's nothing to type for them.
 
 ## Chrome Web Store
 
-- Package: `sift-ao3-1.0.0-chrome.zip`
+- Package: `sift-ao3-1.1.0-chrome.zip`
 - Title from the package: `Sift for AO3: tag blocker, author mute & primary ship filter`
 - Summary from the package: `Make your AO3 filters stick: excluded tags on every search, muted authors, and only fics where your ship comes first.`
 - Category: Lifestyle > Entertainment. Language: English.
@@ -44,11 +48,11 @@ Privacy tab:
 - Single purpose: filter AO3 work listings by keeping the reader's excluded tags applied,
   folding works by muted authors, and showing only works where a chosen ship is the main
   pairing.
-- `storage`: saves the reader's excluded tags, muted authors, ship settings and counters
-  on the device.
+- `storage`: saves the reader's excluded tags, kept AO3 filters, muted authors, ship
+  settings and counters on the device.
 - Host permission `https://archiveofourown.org/*`: shows the Sift bar and panel on AO3
-  pages, folds hidden works, adds saved exclusions to AO3 listing links, and loads a
-  ship's public AO3 tag page to read its other names.
+  pages, folds hidden works, adds saved exclusions and kept filters to AO3 listing
+  links, and loads a ship's public AO3 tag page to read its other names.
 - Remote code: No.
 - Data usage: tick "Website content", because Sift reads AO3 listings on the device to
   decide what to fold. Certify all three Limited Use statements. Nothing is sold or
@@ -57,7 +61,7 @@ Privacy tab:
 
 ## Firefox Add-ons
 
-- Package: `sift-ao3-1.0.0-firefox.zip`. Tick Firefox for Android as well; the manifest
+- Package: `sift-ao3-1.1.0-firefox.zip`. Tick Firefox for Android as well; the manifest
   supports it.
 - Name from the package: `Sift for AO3: tag blocker & primary ship filter` (AMO allows 50
   characters).
