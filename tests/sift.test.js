@@ -156,3 +156,79 @@ test('nextCard: milestones once each, one rating ask after 7 days, silenced by n
   assert.equal(L.nextCard({ listings: 3, firstUse: week }, now), null, 'no ask while STORE_URL is a placeholder');
   assert.equal(L.nextCard({ listings: 600, firstUse: week, noAsks: true }, now, store), null);
 });
+
+const KP = k => `work_search[${k}]`;
+const sidebar = (fields, extra = '') => `${AO3}/tags/Fluff/works?commit=Sort+and+Filter${extra}&` +
+  Object.entries(fields).map(([k, v]) => `${encodeURIComponent(KP(k))}=${encodeURIComponent(v)}`).join('&');
+
+test('keptFromUrl reads the filters AO3 sidebar results carry, and only valid ones', () => {
+  const href = sidebar({ complete: 'T', crossover: 'F', language_id: 'en', words_from: '1,000', words_to: '', query: 'tea' });
+  assert.deepEqual(L.keptFromUrl(href), { complete: 'T', crossover: 'F', language_id: 'en', words_from: '1000' });
+  assert.deepEqual(L.keptFromUrl(sidebar({ complete: 'yes', words_to: '-5', language_id: '<b>' })), {});
+  assert.deepEqual(L.keptFromUrl(`${AO3}/tags/Fluff/bookmarks?${encodeURIComponent(KP('complete'))}=T`), {});
+  assert.deepEqual(L.keptFromUrl(`${AO3}/works/123?${encodeURIComponent(KP('complete'))}=T`), {});
+  assert.equal(L.keptCount({ language_id: 'en', languageName: 'English' }), 1);
+  assert.equal(L.keptCount(null), 0);
+});
+
+test('withKept fills missing filters on work listings and never overrides the URL', () => {
+  const kept = { complete: 'T', crossover: 'F', language_id: 'en', words_from: '1000', languageName: 'English' };
+  const out = L.withKept(`${AO3}/tags/Fluff/works?page=3`, kept, true);
+  assert.equal(params(out).get(KP('complete')), 'T');
+  assert.equal(params(out).get(KP('crossover')), 'F');
+  assert.equal(params(out).get(KP('language_id')), 'en');
+  assert.equal(params(out).get(KP('words_from')), '1000');
+  assert.equal(params(out).get(KP('languageName')), null);
+  assert.equal(params(out).get('page'), null);
+  assert.equal(L.withKept(out, kept), out, 'already there: unchanged');
+
+  // A value already in the URL wins.
+  const ru = L.withKept(`${AO3}/works/search?${encodeURIComponent(KP('language_id'))}=ru&${encodeURIComponent(KP('query'))}=tea`, kept);
+  assert.equal(params(ru).get(KP('language_id')), 'ru');
+  assert.equal(params(ru).get(KP('complete')), 'T');
+
+  // AO3's sidebar sends every field; an empty one there is the reader's "any" and stays empty.
+  const byHand = L.withKept(sidebar({ complete: '', crossover: 'T' }, '&page=2'), kept);
+  assert.equal(params(byHand).get(KP('complete')), '');
+  assert.equal(params(byHand).get(KP('crossover')), 'T');
+  assert.equal(params(byHand).get(KP('language_id')), 'en');
+
+  // Bookmark listings, work pages and non-listings are left alone; nothing kept means no change.
+  for (const href of [`${AO3}/tags/Fluff/bookmarks`, `${AO3}/works/123`, '/series/9']) assert.equal(L.withKept(href, kept), href);
+  assert.equal(L.withKept('/tags/Fluff/works', {}), '/tags/Fluff/works');
+});
+
+test('withFilters adds exclusions and kept filters together; filtersApplied checks both', () => {
+  const cfg = { exclusions: ['Angst'], kept: { complete: 'T' } };
+  const out = L.withFilters(`${AO3}/tags/Fluff/works?page=2`, cfg, true);
+  assert.equal(params(out).get(WX), 'Angst');
+  assert.equal(params(out).get(KP('complete')), 'T');
+  assert.equal(params(out).get('page'), null);
+  assert.ok(L.filtersApplied(out, cfg));
+  assert.ok(!L.filtersApplied(L.withExclusions(`${AO3}/tags/Fluff/works`, ['Angst']), cfg));
+  // Bookmarks only take exclusions.
+  assert.ok(L.filtersApplied(L.withExclusions(`${AO3}/tags/Fluff/bookmarks`, ['Angst']), cfg));
+  assert.equal(L.withFilters('/tags/Fluff/works', { exclusions: [], kept: {} }), '/tags/Fluff/works');
+});
+
+test('describeKept and sameKept', () => {
+  assert.equal(L.describeKept({ complete: 'T', crossover: 'F', language_id: 'en', languageName: 'English', words_from: '1000', words_to: '50000' }),
+    'complete works only, no crossovers, English, 1,000 to 50,000 words');
+  assert.equal(L.describeKept({ complete: 'F', crossover: 'T', language_id: 'ja', words_to: '5000' }),
+    'works in progress only, crossovers only, language ja, at most 5,000 words');
+  assert.equal(L.describeKept({ words_from: '20000' }), 'at least 20,000 words');
+  assert.equal(L.describeKept({}), '');
+  assert.ok(L.sameKept({ language_id: 'en', languageName: 'English' }, { language_id: 'en' }));
+  assert.ok(!L.sameKept({ complete: 'T' }, { complete: 'T', crossover: 'F' }));
+});
+
+test('kept filters import, merge and export', () => {
+  assert.equal(typeof L.parseImport('{"kept":[1]}').error, 'string');
+  assert.equal(typeof L.parseImport('{"kept":"T"}').error, 'string');
+  const r = L.parseImport('{"kept":{"complete":"T","crossover":"maybe","words_from":"2000","extra":"x"}}');
+  assert.deepEqual(r.data, { kept: { complete: 'T', words_from: '2000' } });
+  const merged = L.mergeSettings({ ...L.DEFAULTS, kept: { language_id: 'en', complete: 'F' } }, r.data);
+  assert.deepEqual(merged.kept, { language_id: 'en', complete: 'T', words_from: '2000' });
+  const back = L.parseImport(L.exportSettings(merged)).data;
+  assert.deepEqual(back.kept, merged.kept);
+});

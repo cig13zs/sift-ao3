@@ -10,6 +10,7 @@
   const KOFI_URL = 'https://ko-fi.com/jju1s';
   const DEFAULTS = Object.freeze({
     enabled: true, exclusions: [], mutedAuthors: [], ships: [], autoApply: false, removeHidden: false,
+    kept: {},
   });
   const LISTS = ['exclusions', 'mutedAuthors'];
   const FLAGS = ['autoApply', 'removeHidden'];
@@ -69,6 +70,87 @@
   }
 
   const exclusionsApplied = (href, exclusions) => withExclusions(href, exclusions) === href;
+
+  // Other AO3 work filters Sift can keep on, as named in AO3's filter form (otwarchive
+  // app/views/works/_filters.html.erb). Bookmark listings use different fields, so these only
+  // go on work listings and searches.
+  const KEPT = {
+    complete: v => v === 'T' || v === 'F',
+    crossover: v => v === 'T' || v === 'F',
+    language_id: v => /^[A-Za-z][A-Za-z-]{0,15}$/.test(v),
+    words_from: v => /^\d{1,9}$/.test(v),
+    words_to: v => /^\d{1,9}$/.test(v),
+  };
+  const keptParam = k => `work_search[${k}]`;
+
+  // Only the fields Sift knows, with values AO3 accepts. languageName is display text.
+  function cleanKept(raw) {
+    const out = {};
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out;
+    for (const [k, valid] of Object.entries(KEPT)) {
+      const v = typeof raw[k] === 'string' ? raw[k].trim().replace(/,/g, '') : '';
+      if (v && valid(v)) out[k] = v;
+    }
+    if (out.language_id && typeof raw.languageName === 'string' && raw.languageName.trim()) {
+      out.languageName = raw.languageName.trim().slice(0, 60);
+    }
+    return out;
+  }
+
+  // The keepable filters a works listing URL carries, e.g. after the reader used AO3's sidebar.
+  function keptFromUrl(href) {
+    if (listingKind(href) !== 'works') return {};
+    const u = parse(href);
+    return cleanKept(Object.fromEntries(Object.keys(KEPT).map(k => [k, u.searchParams.get(keptParam(k)) || ''])));
+  }
+
+  const keptCount = kept => Object.keys(cleanKept(kept)).filter(k => k !== 'languageName').length;
+
+  // Same filters, ignoring the language's display name.
+  const sameKept = (a, b) => {
+    const x = cleanKept(a);
+    const y = cleanKept(b);
+    return Object.keys(KEPT).every(k => (x[k] || '') === (y[k] || ''));
+  };
+
+  // Fills kept filters into a works listing URL. A field the URL already sets is left as it is,
+  // so a choice made in AO3's sidebar wins over the saved one. The sidebar submits every field,
+  // so on its results (and their page links) an empty field is the reader's "any" and stays.
+  function withKept(href, kept, resetPage = false) {
+    const k = cleanKept(kept);
+    if (listingKind(href) !== 'works' || !keptCount(k)) return href;
+    const u = parse(href);
+    const byHand = u.searchParams.has('commit');
+    let changed = false;
+    for (const key of Object.keys(KEPT)) {
+      const param = keptParam(key);
+      if (!k[key] || u.searchParams.get(param) || (byHand && u.searchParams.has(param))) continue;
+      u.searchParams.set(param, k[key]);
+      changed = true;
+    }
+    if (!changed) return href;
+    if (resetPage) u.searchParams.delete('page');
+    return u.href;
+  }
+
+  // Everything Sift adds to a listing link: saved exclusions, then kept filters.
+  const withFilters = (href, cfg, resetPage = false) =>
+    withKept(withExclusions(href, cfg.exclusions, resetPage), cfg.kept, resetPage);
+  const filtersApplied = (href, cfg) => withFilters(href, cfg) === href;
+
+  // "complete works only, no crossovers, English, 1,000 to 50,000 words"
+  function describeKept(kept) {
+    const k = cleanKept(kept);
+    const n = v => Number(v).toLocaleString('en-US');
+    const parts = [];
+    if (k.complete) parts.push(k.complete === 'T' ? 'complete works only' : 'works in progress only');
+    if (k.crossover) parts.push(k.crossover === 'F' ? 'no crossovers' : 'crossovers only');
+    if (k.language_id) parts.push(k.languageName || `language ${k.language_id}`);
+    if (k.words_from && k.words_to) parts.push(`${n(k.words_from)} to ${n(k.words_to)} words`);
+    else if (k.words_from) parts.push(`at least ${n(k.words_from)} words`);
+    else if (k.words_to) parts.push(`at most ${n(k.words_to)} words`);
+    return parts.join(', ');
+  }
 
   // AO3's own filter form submits commit=Sort+and+Filter: the reader picked these filters by hand.
   const userFiltered = href => Boolean(parse(href)?.searchParams.has('commit'));
@@ -148,6 +230,11 @@
       if (typeof raw[k] !== 'boolean') return { error: `"${k}" must be true or false.` };
       data[k] = raw[k];
     }
+    if (raw.kept !== undefined) {
+      if (!raw.kept || typeof raw.kept !== 'object' || Array.isArray(raw.kept)) return { error: '"kept" must be an object of AO3 filters.' };
+      const kept = cleanKept(raw.kept);
+      if (keptCount(kept)) data.kept = kept;
+    }
     if (!Object.keys(data).length) return { error: 'Nothing Sift can use in that file.' };
     return { data, skipped };
   }
@@ -162,12 +249,13 @@
       out.ships = [...byName.values()];
     }
     for (const k of FLAGS) if (k in data) out[k] = data[k];
+    if (data.kept) out.kept = { ...cleanKept(current.kept), ...data.kept };
     return out;
   }
 
   const exportSettings = s => JSON.stringify({
     app: 'sift-ao3', version: 1, exclusions: s.exclusions, mutedAuthors: s.mutedAuthors,
-    ships: s.ships, autoApply: s.autoApply, removeHidden: s.removeHidden,
+    ships: s.ships, autoApply: s.autoApply, removeHidden: s.removeHidden, kept: cleanKept(s.kept),
   }, null, 2);
 
   // One card at a time: milestones at 500 and 5,000 filtered listings, then one rating ask
@@ -182,6 +270,7 @@
 
   const api = {
     AO3, DAY, STORE_URL, KOFI_URL, DEFAULTS, norm, listingKind, withExclusions, exclusionsApplied,
+    cleanKept, keptFromUrl, keptCount, sameKept, withKept, withFilters, filtersApplied, describeKept,
     userFiltered, userFromHref, isPrimaryShip, parseTagPage, parseList, parseImport, mergeSettings,
     exportSettings, nextCard,
   };
