@@ -4,6 +4,9 @@ Sift is a browser extension for reading on Archive of Our Own. It keeps your exc
 tags on for every listing and search, mutes authors even when you're logged out, and on
 a ship's works page it can fold away the fics where that ship is only a side pairing.
 
+[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/nonieoiidaeaeheddaifgdmecgcbfgpl?label=chrome%20web%20store)](https://chromewebstore.google.com/detail/nonieoiidaeaeheddaifgdmecgcbfgpl)
+[![Users](https://img.shields.io/chrome-web-store/users/nonieoiidaeaeheddaifgdmecgcbfgpl)](https://chromewebstore.google.com/detail/nonieoiidaeaeheddaifgdmecgcbfgpl)
+[![Tests](https://img.shields.io/github/actions/workflow/status/cig13zs/sift-ao3/test.yml?label=tests)](https://github.com/cig13zs/sift-ao3/actions)
 [![Support on Ko-fi](https://img.shields.io/badge/Ko--fi-support%20Sift-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/jju1s)
 
 ![A ship's works page with the Sift bar: 3 of 10 works hidden because the ship isn't listed first](store/1-primary-ship.png)
@@ -41,8 +44,10 @@ If you're logged in, AO3's own muting works too.
 
 ## Install
 
-The Chrome Web Store and Firefox Add-ons listings are in review, and their links will go
-here. Until then you can load it yourself in Chrome, Edge or Brave:
+Get it from the [Chrome Web Store](https://chromewebstore.google.com/detail/nonieoiidaeaeheddaifgdmecgcbfgpl).
+It works in Chrome, Edge and Brave.
+
+The Firefox Add-ons listing is in review. You can also load a release build yourself:
 
 1. Download `sift-ao3-1.0.0-chrome.zip` from the [latest release](https://github.com/cig13zs/sift-ao3/releases/latest) and unzip it.
 2. Open `chrome://extensions` and turn on Developer mode.
