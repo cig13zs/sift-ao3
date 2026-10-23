@@ -153,6 +153,8 @@ test('nextCard: milestones once each, one rating ask after 7 days, silenced by n
   const week = now - 7 * L.DAY;
   assert.equal(L.nextCard({ listings: 3, firstUse: week }, now, store), 'rating');
   assert.equal(L.nextCard({ listings: 3, firstUse: week, seen: ['rating'] }, now, store), null);
-  assert.equal(L.nextCard({ listings: 3, firstUse: week }, now), null, 'no ask while STORE_URL is a placeholder');
+  assert.equal(L.nextCard({ listings: 3, firstUse: week }, now, 'STORE_URL'), null, 'no ask without a real store URL');
+  assert.equal(L.nextCard({ listings: 3, firstUse: week }, now), 'rating', 'the default STORE_URL is the live listing');
+  assert.match(L.STORE_URL, /^https:\/\/chromewebstore\.google\.com\/detail\/nonieoiidaeaeheddaifgdmecgcbfgpl/);
   assert.equal(L.nextCard({ listings: 600, firstUse: week, noAsks: true }, now, store), null);
 });
