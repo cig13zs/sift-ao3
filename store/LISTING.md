@@ -69,5 +69,5 @@ Privacy tab:
 
 ## After approval
 
-Put the Chrome Web Store URL into `STORE_URL` in `src/lib/sift.js` (it switches on the
-one-time rating card) and the store links into the README, then release 1.0.1.
+Done for Chrome: `STORE_URL` in `src/lib/sift.js` points at the Chrome Web Store reviews
+page, which switches on the one-time rating card.

@@ -5,8 +5,8 @@
 
   const AO3 = 'https://archiveofourown.org';
   const DAY = 864e5;
-  // The lead fills this in before release; the rating card stays off until it is a real URL.
-  const STORE_URL = 'STORE_URL';
+  // Chrome Web Store reviews page for the one-time rating card.
+  const STORE_URL = 'https://chromewebstore.google.com/detail/nonieoiidaeaeheddaifgdmecgcbfgpl/reviews';
   const KOFI_URL = 'https://ko-fi.com/jju1s';
   const DEFAULTS = Object.freeze({
     enabled: true, exclusions: [], mutedAuthors: [], ships: [], autoApply: false, removeHidden: false,
