@@ -24,6 +24,22 @@ function removeFrom(key, index) {
   (buttons[Math.min(index, buttons.length - 1)] || $(key === 'ships' ? 'h-ships' : 'add-' + key))?.focus();
 }
 
+// One row per kept filter; the word count range is one row.
+const KEPT_ROWS = [
+  ['Completion', ['complete']],
+  ['Crossovers', ['crossover']],
+  ['Language', ['language_id', 'languageName']],
+  ['Word count', ['words_from', 'words_to']],
+];
+
+function removeKept(keys) {
+  const kept = { ...cfg.kept };
+  for (const k of keys) delete kept[k];
+  save({ kept: L.cleanKept(kept) });
+  const buttons = $('kept').querySelectorAll('button');
+  (buttons[0] || $('h-kept')).focus();
+}
+
 function render() {
   for (const key of ['exclusions', 'mutedAuthors']) {
     $(key).replaceChildren(...(cfg[key].length
@@ -41,6 +57,14 @@ function render() {
       return el('li', [el('span', ship.name), el('span', [select, button('Remove', `Remove ${ship.name}`, () => removeFrom('ships', i))], { class: 'actions' })]);
     })
     : [el('li', el('span', 'No saved ships yet.'))]));
+  const kept = L.cleanKept(cfg.kept);
+  const keptRows = KEPT_ROWS.filter(([, keys]) => kept[keys[0]] || kept[keys[1]]);
+  $('kept').replaceChildren(...(keptRows.length
+    ? keptRows.map(([title, keys]) => {
+      const text = L.describeKept(Object.fromEntries(keys.filter(k => kept[k]).map(k => [k, kept[k]])));
+      return el('li', [el('span', `${title}: ${text}`), button('Remove', `Remove ${title.toLowerCase()} filter`, () => removeKept(keys))]);
+    })
+    : [el('li', el('span', 'No kept filters yet.'))]));
   $('autoApply').checked = cfg.autoApply;
   $('removeHidden').checked = cfg.removeHidden;
 }
