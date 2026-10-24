@@ -26,7 +26,7 @@ async function main(state) {
     sessionStorage.removeItem('sift-auto');
   } catch { canGuard = false; }
   if (cfg.enabled && cfg.autoApply && kind && canGuard && !afterAutoApply && !L.userFiltered(location.href)) {
-    const target = L.withExclusions(location.href, cfg.exclusions, true);
+    const target = L.withFilters(location.href, cfg, true);
     if (target !== location.href) {
       sessionStorage.setItem('sift-auto', '1');
       location.replace(target);
@@ -90,6 +90,7 @@ async function main(state) {
   let synState = '';        // '' | 'loading' | 'failed'
   let synLoad = null;
   let hiddenCount = 0;
+  let keptJustNow = false;
   let bar = null;
   const ui = {};
 
@@ -129,14 +130,14 @@ async function main(state) {
   }
 
   function rewriteLinks() {
-    const exclusions = cfg.enabled ? cfg.exclusions : [];
+    const filters = cfg.enabled ? cfg : { exclusions: [], kept: {} };
     for (const a of document.querySelectorAll('a[href]')) {
       // AO3's own filter form (including "Clear Filters") stays AO3's.
       if (a.closest('form, .sift-ui')) continue;
       const orig = a.dataset.siftHref ?? a.getAttribute('href');
       if (!/\/(?:works|bookmarks)(?:\/search)?\/?(?:[?#]|$)/.test(orig)) continue;
       const resolved = new URL(orig, location.href).href;
-      const next = L.withExclusions(resolved, exclusions);
+      const next = L.withFilters(resolved, filters);
       if (next !== resolved) {
         a.dataset.siftHref = orig;
         a.setAttribute('href', next);
@@ -207,7 +208,7 @@ async function main(state) {
         ...b.groups.flatMap(([title, tags]) => section(title, tags.map(t => row(t, 'exclusions', 'Excluded', 'Exclude')))),
       );
       b.status = el('p', 'sift-status', '', { 'aria-live': 'polite' });
-      b.reload = button('Reload filtered', () => location.assign(L.withExclusions(location.href, cfg.exclusions, true)));
+      b.reload = button('Reload filtered', () => location.assign(L.withFilters(location.href, cfg, true)));
       b.reload.hidden = true;
       b.panel.append(el('div', 'sift-row', [b.status, b.reload]));
       b.header.after(b.panel);
@@ -247,9 +248,24 @@ async function main(state) {
 
     if (kind) {
       ui.exText = el('span');
-      ui.apply = button('Apply my filters', () => location.assign(L.withExclusions(location.href, cfg.exclusions, true)));
+      ui.apply = button('Apply my filters', () => location.assign(L.withFilters(location.href, cfg, true)));
       ui.exRow = el('p', 'sift-row', [ui.exText, ui.apply]);
       bar.append(ui.exRow);
+    }
+
+    // Filters picked in AO3's own sidebar (complete only, language, crossovers, word count) can be
+    // kept on for every listing, the same way as exclusions.
+    if (kind === 'works') {
+      ui.keepText = el('span');
+      ui.keep = button('Keep on every listing', async () => {
+        const kept = keptOnPage();
+        cfg = { ...cfg, kept };
+        keptJustNow = true;
+        render();
+        await chrome.storage.local.set({ kept });
+      });
+      ui.keepRow = el('p', 'sift-row', [ui.keepText, ui.keep], { 'aria-live': 'polite' });
+      bar.append(ui.keepRow);
     }
 
     if (isShipPage) {
@@ -280,18 +296,39 @@ async function main(state) {
     }
   }
 
+  // The page's kept-able filters, with the language's name from AO3's own language menu.
+  function keptOnPage() {
+    const fromUrl = L.keptFromUrl(location.href);
+    const option = fromUrl.language_id &&
+      [...document.querySelectorAll('#work_search_language_id option')].find(o => o.value === fromUrl.language_id);
+    return L.cleanKept({ ...fromUrl, languageName: option?.textContent || '' });
+  }
+
   function renderBar() {
     ui.count.textContent = `${hiddenCount} of ${blurbs.length} works hidden on this page`;
     ui.showAll.hidden = !hiddenCount;
     ui.showAll.textContent = blurbs.some(b => b.hidden && !b.revealed) ? 'Show all' : 'Hide again';
     if (ui.exRow) {
       const n = cfg.exclusions.length;
-      const applied = L.exclusionsApplied(location.href, cfg.exclusions);
-      ui.exRow.hidden = !n;
-      ui.exText.textContent = applied
-        ? `Your ${n} saved exclusion${n === 1 ? ' is' : 's are'} applied to this listing.`
-        : 'Your saved exclusions are not applied to this listing.';
+      const kept = kind === 'works' ? L.describeKept(cfg.kept) : '';
+      const exclusions = `${n} saved exclusion${n === 1 ? '' : 's'}`;
+      const applied = L.filtersApplied(location.href, cfg);
+      ui.exRow.hidden = !n && !kept;
+      ui.exText.textContent = !applied
+        ? `Your saved ${kept ? 'filters' : 'exclusions'} are not applied to this listing.`
+        : !kept ? `Your ${exclusions} ${n === 1 ? 'is' : 'are'} applied to this listing.`
+          : n ? `Your ${exclusions} and kept filters (${kept}) are applied to this listing.`
+            : `Your kept filters (${kept}) are applied to this listing.`;
       ui.apply.hidden = applied;
+    }
+    if (ui.keepRow) {
+      const fromUrl = keptOnPage();
+      const offer = L.keptCount(fromUrl) > 0 && !L.sameKept(fromUrl, cfg.kept);
+      ui.keepRow.hidden = !offer && !keptJustNow;
+      ui.keep.hidden = !offer;
+      ui.keepText.textContent = offer
+        ? `This listing uses ${L.describeKept(fromUrl)}.`
+        : 'Kept. Every AO3 listing you open now uses these filters; change them in Sift\'s options.';
     }
     if (ui.first) {
       ui.first.input.checked = Boolean(ship);
@@ -302,7 +339,7 @@ async function main(state) {
           : synState === 'failed' ? 'AO3 did not answer, so works that use another name for this ship may be hidden too.'
             : 'On for this ship on every page, until you untick it.';
     }
-    ui.tip.hidden = Boolean(cfg.exclusions.length || cfg.mutedAuthors.length || cfg.ships.length);
+    ui.tip.hidden = Boolean(cfg.exclusions.length || cfg.mutedAuthors.length || cfg.ships.length || L.keptCount(cfg.kept));
   }
 
   function showCard(id) {
@@ -348,7 +385,7 @@ async function main(state) {
     const { stats = {} } = await chrome.storage.local.get('stats');
     const now = Date.now();
     const filtered = hiddenCount > 0 || Boolean(ship) ||
-      Boolean(kind && cfg.exclusions.length && L.exclusionsApplied(location.href, cfg.exclusions));
+      Boolean(kind && (cfg.exclusions.length || L.keptCount(cfg.kept)) && L.filtersApplied(location.href, cfg));
     stats.firstUse ??= now;
     stats.hiddenTotal = (stats.hiddenTotal || 0) + hiddenCount;
     if (filtered) stats.listings = (stats.listings || 0) + 1;

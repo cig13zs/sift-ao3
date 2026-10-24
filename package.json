@@ -1,6 +1,6 @@
 {
   "name": "sift-ao3",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Make your AO3 filters stick: excluded tags on every search, muted authors, and only fics where your ship comes first.",
   "license": "MIT",
