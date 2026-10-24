@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.0 - 2026-10-23
+
+- Keep AO3's sidebar filters on every listing. After filtering a works page with AO3's own
+  sidebar (complete works only, works in progress only, a language, no crossovers or only
+  crossovers, a word count range), press "Keep on every listing" in the Sift bar. Links to
+  work listings and searches then carry those filters, the same way as saved exclusions, and
+  "Apply my filters" and the automatic reload add them too. A value you set in the sidebar for
+  one search still wins. The options page lists kept filters and removes them one by one, and
+  backups include them.
+
 ## 1.0.0 - 2026-09-26
 
 First release.

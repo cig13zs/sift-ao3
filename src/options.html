@@ -35,6 +35,11 @@
     </form>
   </section>
 
+  <section aria-labelledby="h-kept">
+    <h2 id="h-kept" tabindex="-1">Kept AO3 filters</h2>
+    <p>Filters from AO3's own sidebar that Sift adds to every work listing and search, like your exclusions. To keep some, filter a listing with AO3's sidebar (for example complete works only, a language or a word count) and press "Keep on every listing" in the Sift bar.</p>
+    <ul id="kept" class="names" aria-labelledby="h-kept"></ul>
+  </section>
   <section aria-labelledby="h-ships">
     <h2 id="h-ships" tabindex="-1">Saved ships</h2>
     <p>The primary ship filter turns on by itself on these relationship tag pages. To add one, open the ship's works page and tick "Only works where this ship is listed first" in the Sift bar.</p>
@@ -44,7 +49,7 @@
   <section aria-labelledby="h-behaviour">
     <h2 id="h-behaviour">Behaviour</h2>
     <p><label class="check"><input type="checkbox" id="autoApply"> Always apply my exclusions automatically</label></p>
-    <p class="hint">When a listing opens without them (a typed address or an outside link), Sift reloads it once with your exclusions. It never reloads the same page twice, and never after you use AO3's own filter form.</p>
+    <p class="hint">When a listing opens without them (a typed address or an outside link), Sift reloads it once with your exclusions and kept filters. It never reloads the same page twice, and never after you use AO3's own filter form.</p>
     <p><label class="check"><input type="checkbox" id="removeHidden"> Remove hidden works entirely instead of collapsing them</label></p>
   </section>
 

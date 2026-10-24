@@ -249,6 +249,41 @@ await step('"Apply my filters" merges saved exclusions into the URL and drops th
   assert.equal(await bar.getByRole('button', { name: 'Apply my filters' }).isVisible(), false);
 });
 
+await step('AO3 sidebar filters kept on every listing: complete only, language, word count', async () => {
+  await reset({});
+  const KEPT = { 'work_search[complete]': 'T', 'work_search[language_id]': 'en', 'work_search[words_from]': '1000' };
+  await page.goto(LISTING + q({ commit: 'Sort and Filter', ...KEPT, 'work_search[crossover]': '', page: '2' }));
+  const bar = page.locator('.sift-bar');
+  await bar.getByText('This listing uses complete works only, English, at least 1,000 words.').waitFor();
+  await bar.getByRole('button', { name: 'Keep on every listing' }).click();
+  await bar.getByText('Kept. Every AO3 listing you open now uses these filters').waitFor();
+  assert.deepEqual((await getStore('kept')).kept,
+    { complete: 'T', language_id: 'en', languageName: 'English', words_from: '1000' });
+  await shot(page, 'tests/screenshots/keep-filters.png', '#main h2.heading');
+
+  // Links to other listings carry them; AO3's own form and "Clear Filters" stay as they are.
+  const tagLink = new URL(await page.locator('#work_101 li.freeforms a.tag').first().getAttribute('href'), AO3);
+  for (const [k, v] of Object.entries(KEPT)) assert.equal(tagLink.searchParams.get(k), v, k);
+  assert.equal(await page.locator('#work-filters p.footnote a').getAttribute('href'), SHIP_PATH + '/works');
+
+  await page.goto(LISTING);
+  await bar.getByText('Your saved filters are not applied to this listing.').waitFor();
+  await bar.getByRole('button', { name: 'Apply my filters' }).click();
+  await page.waitForURL(u => new URL(u).searchParams.get('work_search[complete]') === 'T');
+  for (const [k, v] of Object.entries(KEPT)) assert.equal(new URL(page.url()).searchParams.get(k), v, k);
+  await bar.getByText('Your kept filters (complete works only, English, at least 1,000 words) are applied to this listing.').waitFor();
+  assert.equal(await bar.getByRole('button', { name: 'Keep on every listing' }).isVisible(), false);
+
+  await ext.goto(OPTIONS);
+  await ext.locator('#kept li', { hasText: 'Language: English' }).waitFor();
+  assert.equal(await ext.locator('#kept li').count(), 3);
+  await ext.getByRole('button', { name: 'Remove completion filter' }).click();
+  await ext.locator('#kept li', { hasText: 'Completion' }).waitFor({ state: 'detached' });
+  assert.equal(await ext.locator('#kept li').count(), 2);
+  assert.deepEqual((await getStore('kept')).kept, { language_id: 'en', languageName: 'English', words_from: '1000' });
+  await page.bringToFront();
+});
+
 await step('auto-apply redirects once; never twice when AO3 drops the filter, never after AO3\'s form', async () => {
   await reset({ exclusions: ['Fluff'], autoApply: true });
   hits.length = 0;

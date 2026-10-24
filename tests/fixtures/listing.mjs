@@ -185,6 +185,8 @@ export function listingPage(exclude = []) {
           <dd class="autocomplete search"><input class="autocomplete" type="text" name="work_search[excluded_tag_names]" id="work_search_excluded_tag_names" /></dd>
         </dl>
       </dd>
+      <dt class="language"><label for="work_search_language_id">Language</label></dt>
+      <dd class="language"><select name="work_search[language_id]" id="work_search_language_id"><option value=""></option><option value="de">Deutsch</option><option value="en">English</option><option value="es">Español</option></select></dd>
     </dl>
   </fieldset>
   <input type="hidden" name="tag_id" id="tag_id" value="${esc(SHIP)}" class="text" autocomplete="off" />
