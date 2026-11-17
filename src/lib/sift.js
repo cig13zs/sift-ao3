@@ -172,14 +172,38 @@
   const decode = s => s.replace(/&(?:#(\d+)|#x([0-9a-f]+)|(\w+));/gi, (m, dec, hex, name) =>
     dec ? String.fromCodePoint(+dec) : hex ? String.fromCodePoint(parseInt(hex, 16)) : ENTITIES[name.toLowerCase()] ?? m);
 
+  // AO3 listbox sections use a fixed class set but attribute order can vary between skins.
+  function listboxBody(html, kind) {
+    const patterns = [
+      '<div class="' + kind + ' listbox group">',
+      '<div class="listbox group ' + kind + '">',
+      '<div class="' + kind + ' listbox group" ',
+    ];
+    for (const start of patterns) {
+      const i = html.indexOf(start);
+      if (i < 0) continue;
+      const open = html.indexOf('>', i) + 1;
+      let depth = 1;
+      let p = open;
+      while (depth > 0 && p < html.length) {
+        const nextOpen = html.indexOf('<div', p);
+        const nextClose = html.indexOf('</div>', p);
+        if (nextClose < 0) break;
+        if (nextOpen >= 0 && nextOpen < nextClose) { depth++; p = nextOpen + 4; }
+        else { depth--; p = nextClose + 6; if (depth === 0) return html.slice(open, nextClose); }
+      }
+    }
+  return '';
+  }
+
   // Reads a public /tags/<tag> page: "Tags with the same meaning" plus subtags (more specific
   // versions of a ship still count as that ship). Returns null if it isn't a tag page.
   function parseTagPage(html) {
-    if (!/class="tag home profile"/.test(html)) return null;
+    if (!/\btag home profile\b/.test(html)) return null;
     const names = [];
     for (const box of ['synonym', 'sub']) {
-      const m = new RegExp('<div class="' + box + ' listbox group">([\\s\\S]*?)</div>').exec(html);
-      if (m) for (const a of m[1].matchAll(/<a class="tag"[^>]*>([^<]*)<\/a>/g)) names.push(decode(a[1]).trim());
+      const body = listboxBody(html, box);
+      if (body) for (const a of body.matchAll(/<a class="tag"[^>]*>([^<]*)<\/a>/g)) names.push(decode(a[1]).trim());
     }
     return names;
   }

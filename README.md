@@ -1,103 +1,91 @@
 # Sift for AO3
 
-Sift is a browser extension for reading on Archive of Our Own. It keeps your excluded
-tags on for every listing and search, mutes authors even when you're logged out, and on
-a ship's works page it can fold away the fics where that ship is only a side pairing.
+**Make your AO3 filters stick: excluded tags on every search, muted authors, and fics where your ship comes first.**
 
 [![Chrome Web Store](https://img.shields.io/chrome-web-store/v/nonieoiidaeaeheddaifgdmecgcbfgpl?label=chrome%20web%20store)](https://chromewebstore.google.com/detail/nonieoiidaeaeheddaifgdmecgcbfgpl)
 [![Users](https://img.shields.io/chrome-web-store/users/nonieoiidaeaeheddaifgdmecgcbfgpl)](https://chromewebstore.google.com/detail/nonieoiidaeaeheddaifgdmecgcbfgpl)
 [![Tests](https://img.shields.io/github/actions/workflow/status/cig13zs/sift-ao3/test.yml?label=tests)](https://github.com/cig13zs/sift-ao3/actions)
-[![Support on Ko-fi](https://img.shields.io/badge/Ko--fi-support%20Sift-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/jju1s)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-![A ship's works page with the Sift bar: 3 of 10 works hidden because the ship isn't listed first](store/1-primary-ship.png)
+[Install from the Chrome Web Store](https://chromewebstore.google.com/detail/nonieoiidaeaeheddaifgdmecgcbfgpl)
 
-## Your ship first
+Sift is a private, offline browser extension for [Archive of Our Own](https://archiveofourown.org). Your lists stay in the browser. There is no account, no analytics, and no data sent to the author.
 
-Open a relationship tag's works page and tick "Only works where this ship is listed
-first" in the Sift bar. Works where the ship is a background pairing shrink to a
-one-line bar with a Show button, so nothing is gone for good. Sift reads the tag's
-"Tags with the same meaning" list on AO3, once a week per ship, which means
-"Juniper Vale/Ash Marlow" counts as the same ship as "Ash Marlow/Juniper Vale".
+## Features
 
-If first place is too strict, tick "Ship in the first two relationship tags" as well.
-The filter stays on for that ship until you untick it.
+- **Primary ship filter** — On a relationship tag's works page, hide (or collapse) fics where that ship is not listed first, or optionally in the first two relationship tags. AO3 synonyms and subtags count as the same ship.
+- **Saved tag exclusions** — Tags you exclude are added to AO3's own listing filter on every works or bookmarks listing you open via links on the site, so synonym tags are excluded and pages stay full.
+- **Kept sidebar filters** — Complete/in-progress, language, crossover, and word-count choices from AO3's sidebar can be kept on every work listing, like exclusions.
+- **Muted authors** — Hide works by an AO3 user on every listing, every pseud, including co-authored works, without logging in.
+- **Per-work panel** — Press **Sift** on any work to mute its author or exclude any of its tags.
+- **Popup** — Hidden counts for this page and in total, on/off switch, and link to options.
+- **Options** — Manage lists, import/export JSON (including AO3 Savior-style backups), and behaviour toggles.
+- **Keyboard shortcut** — `Alt+Shift+S` toggles Sift (customize at `chrome://extensions/shortcuts`).
 
-## Excluded tags that stay excluded
+## Screenshots
 
-AO3's filter sidebar forgets your excluded tags as soon as you open another tag or
-search. Press the Sift button on any work and choose Exclude next to a tag, or type
-tags into the options page. After that, every link on AO3 that leads to a listing (tag
-pages, searches, a user's works, bookmarks) carries your exclusions and AO3 does the
-filtering itself. Synonym tags get excluded along with the tag, and pages stay full.
+![Primary ship filter on a relationship works page](store/1-primary-ship.png)
 
-The same goes for AO3's other sidebar filters. Pick complete works only, a language,
-no crossovers or a word count range in AO3's sidebar, press Sort and Filter, then press
-"Keep on every listing" in the Sift bar. From then on every work listing and search you
-open uses them too, until you remove them on the options page. A filter you change in
-AO3's sidebar for one search still wins for that search.
+![Sift panel: Exclude tags and Mute author](store/2-exclude-from-panel.png)
 
-If you land on a listing some other way, like a bookmark in your browser, the Sift bar
-offers "Apply my filters". Turn on "always apply automatically" in the options and Sift
-does it for you, once per page.
+![Listing with muted author and applied exclusion](store/3-hidden-listing.png)
 
-![The Sift panel on a work, with Exclude next to each tag and Mute next to the author](store/2-exclude-from-panel.png)
+![Options page with saved lists](store/4-options.png)
 
-## Muted authors
+![Extension popup with hidden counts](store/5-popup.png)
 
-Press Mute next to an author in the Sift panel. Their works fold away on every listing,
-under every pseud, including works they co-wrote. This works without an AO3 account.
-If you're logged in, AO3's own muting works too.
+## Permissions
 
-## Install
+| Permission | Why Sift needs it |
+|------------|-------------------|
+| `storage` | Save your exclusions, muted authors, ships, kept filters, and on/off state locally in the browser. |
+| `https://archiveofourown.org/*` (host) | Run the content script on AO3 only, rewrite listing links to carry your filters, and (when you enable a ship filter) fetch that ship's public tag page for synonym names — same origin only, no other sites. |
 
-Get it from the [Chrome Web Store](https://chromewebstore.google.com/detail/nonieoiidaeaeheddaifgdmecgcbfgpl).
-It works in Chrome, Edge and Brave.
-
-The Firefox Add-ons listing is in review. You can also load a release build yourself:
-
-1. Download `sift-ao3-1.0.0-chrome.zip` from the [latest release](https://github.com/cig13zs/sift-ao3/releases/latest) and unzip it.
-2. Open `chrome://extensions` and turn on Developer mode.
-3. Choose "Load unpacked" and pick the unzipped folder.
+Sift does **not** request broad host access, `tabs`, scripting, or network permissions beyond AO3. Extension pages use a strict Content Security Policy: scripts load only from the package (`script-src 'self'`).
 
 ## Privacy
 
-Your excluded tags, muted authors and ship settings are saved in your browser's local
-extension storage. They don't sync to your other devices, and they're never sent to me
-or anyone else. A block list can say a lot about a person. Sift has no server to send it
-to, and it doesn't use analytics or ads.
+- All lists and settings live in **local extension storage** on your device. They are not synced to the developer and are not sent to any server Sift controls.
+- Sift does not use analytics, ads, or remote code.
+- Filter data is sent **only to AO3**, in listing URLs (the same way AO3's own filter form works). Ship synonym lookup loads one public AO3 tag page per ship, at most about once a week per ship.
+- See [PRIVACY.md](PRIVACY.md) for the full policy.
 
-Sift talks to one website, AO3. Your excluded tags go to AO3 inside the listing address,
-the same way AO3's own filter sends them. When you turn on the ship filter, Sift loads
-that ship's public tag page to read its other names. The full policy is in
-[PRIVACY.md](PRIVACY.md).
+## Install
 
-## Backups
+**Chrome, Edge, Brave:** [Chrome Web Store listing](https://chromewebstore.google.com/detail/nonieoiidaeaeheddaifgdmecgcbfgpl)
 
-The options page exports everything to a JSON file and imports it again. It also takes
-the tag and author blacklists from AO3 Savior's settings. Patterns with a `*` can't
-become AO3 filters, so Sift skips those and tells you how many it skipped.
+**Firefox:** Add-ons listing is in review. Until then, download `sift-ao3-*-firefox.zip` from the [latest GitHub release](https://github.com/cig13zs/sift-ao3/releases/latest), unzip, and load the folder as a temporary extension.
 
-## Limits
-
-- Exclusions work where AO3 can filter: tag works pages, searches, users' works and
-  bookmarks. Series pages aren't filtered. Kept sidebar filters (complete, language,
-  crossovers, word count) apply to work listings and searches, not bookmarks.
-- For the biggest ships, AO3's tag page may not list every alternative name. A work
-  tagged with a rare one can fold by mistake, and it's still one click away.
-- If AO3 changes its page layout, Sift may stop reading it. The toolbar popup says so
-  instead of breaking the page.
-
-## Support
-
-Sift is free and MIT licensed. If it makes AO3 nicer to browse, you can
-[buy me a coffee on Ko-fi](https://ko-fi.com/jju1s). Bug reports and ideas go in
-[issues](https://github.com/cig13zs/sift-ao3/issues).
-
-Sift is an unofficial project. It isn't affiliated with the Organization for
-Transformative Works or Archive of Our Own.
+**Development / unpacked:** run `npm run build`, then in `chrome://extensions` enable Developer mode and **Load unpacked** → `dist/chrome/`.
 
 ## Development
 
-`node --test tests/` runs the unit tests, `node build.mjs` builds both browsers into
-`dist/`, and `node tests/e2e.mjs` loads the extension in Chromium against made-up AO3
-pages.
+Requirements: [Node.js](https://nodejs.org/) 20+ (CI uses 24).
+
+```bash
+npm ci
+npm run lint    # syntax + manifest security checks
+npm test        # unit tests (src/lib/sift.js)
+npm run build   # dist/chrome, dist/firefox, and zip files
+npm run e2e     # Playwright loads unpacked build against synthetic AO3 pages
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md). Latest store-facing release in this repo: **1.1.1**.
+
+## Security
+
+Report vulnerabilities privately: [GitHub security advisories](https://github.com/cig13zs/sift-ao3/security/advisories/new) ([SECURITY.md](SECURITY.md)).
+
+## Support and license
+
+Sift is free [MIT](LICENSE) software by [jju1s](https://ko-fi.com/jju1s). Bug reports and ideas: [GitHub issues](https://github.com/cig13zs/sift-ao3/issues).
+
+Sift is unofficial and not affiliated with the Organization for Transformative Works or Archive of Our Own.
+
+## More tools by the same author
+
+Other projects by [cig13zs on GitHub](https://github.com/cig13zs):

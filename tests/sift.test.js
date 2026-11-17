@@ -102,6 +102,18 @@ test('parseTagPage reads synonyms and subtags only, decodes entities, rejects ot
   assert.equal(L.parseTagPage('<html><title>Retry later</title></html>'), null);
 });
 
+test('parseTagPage tolerates alternate AO3 listbox class order', () => {
+  const html = `<!DOCTYPE html><html><body class="tag home profile">
+    <div class="listbox group synonym">
+      <ul><li><a class="tag">Ship B/Ship A</a></li></ul>
+    </div>
+    <div class="listbox group sub">
+      <ul><li><a class="tag">Ship A/Ship B (AU)</a></li></ul>
+    </div>
+  </body></html>`;
+  assert.deepEqual(L.parseTagPage(html), ['Ship B/Ship A', 'Ship A/Ship B (AU)']);
+});
+
 test('parseImport rejects malformed JSON and wrong types; a failed import leaves settings alone', () => {
   const current = { ...L.DEFAULTS, exclusions: ['Angst'], mutedAuthors: ['quill_moth'] };
   const snapshot = JSON.stringify(current);

@@ -39,6 +39,8 @@ footer { font-size: 0.8125em; }
 .counts div { display: flex; justify-content: space-between; padding: 0.3em 0; border-bottom: 1px solid var(--line); }
 .counts dt { margin: 0; }
 .counts dd { margin: 0; font-weight: bold; }
+.popup .row { margin: 0.5em 0; align-items: center; }
+.popup #shortcut { font-size: 0.75em; }
 .popup footer { margin-top: 0.75em; padding-top: 0.5em; border-top: 1px solid var(--line); text-align: right; }
 
 /* Options */
@@ -63,3 +65,4 @@ textarea { font: inherit; color: var(--fg); background: var(--bg); border: 1px s
 .row { display: flex; flex-wrap: wrap; gap: 0.5em; align-items: center; }
 .status:empty { display: none; }
 .options footer { max-width: 44rem; margin: 0 auto; padding: 0 1rem 1.5rem; }
+.options kbd, .options code { font: inherit; font-size: 0.875em; padding: 0.1em 0.35em; border: 1px solid var(--btn-line); border-radius: 0.2em; background: var(--btn); }

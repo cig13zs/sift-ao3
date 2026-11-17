@@ -1,0 +1,23 @@
+name: Feature request
+description: An idea to make Sift easier or more useful on AO3
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like Sift to do?
+    validations:
+      required: true
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - label: I understand Sift stays offline with no analytics or new tracking
+          required: true

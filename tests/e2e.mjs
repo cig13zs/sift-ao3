@@ -51,7 +51,7 @@ async function serve(route) {
 // One live fetch per stylesheet or image per run; tests pass without them.
 async function asset(route, url) {
   if (!assets.has(url)) {
-    assets.set(url, route.fetch({ timeout: 15000 })
+    assets.set(url, route.fetch({ timeout: 4000 })
       .then(async r => (r.ok() ? { contentType: r.headers()['content-type'], body: await r.body() } : null))
       .catch(() => null));
   }
@@ -98,7 +98,7 @@ async function launch(options = {}) {
     }
   });
   await cdp.send('Runtime.enable');
-  await page.goto(LISTING);
+  await page.goto(LISTING, { waitUntil: 'domcontentloaded' });
   await page.locator('.sift-bar').waitFor();
   assert.ok(extId, 'content script context not found');
   return { context, page, extId };
@@ -324,6 +324,7 @@ await step('popup shows this page\'s counts; its switch turns Sift off and on', 
   await ext.goto(POPUP); // loads in the background tab, so the listing is the active tab
   await ext.locator('#page', { hasText: '3 of 10' }).waitFor();
   assert.equal(await ext.locator('#total').textContent(), '3');
+  await ext.screenshot({ path: path.join(root, 'store', '5-popup.png') });
   await ext.locator('#enabled').uncheck();
   await page.waitForFunction(() => document.documentElement.classList.contains('sift-off'));
   assert.deepEqual(await collapsed(page), []);
