@@ -40,12 +40,16 @@ function removeKept(keys) {
   (buttons[0] || $('h-kept')).focus();
 }
 
+function emptyItem(text) {
+  return el('li', el('span', text), { class: 'is-empty' });
+}
+
 function render() {
   for (const key of ['exclusions', 'mutedAuthors']) {
     $(key).replaceChildren(...(cfg[key].length
       ? cfg[key].map((name, i) => el('li', [el('span', name),
-        button('Remove', `Remove ${name}`, () => removeFrom(key, i))]))
-      : [el('li', el('span', key === 'exclusions' ? 'No saved exclusions yet.' : 'No muted authors.'))]));
+        chipButton('Remove', `Remove ${name}`, () => removeFrom(key, i))]))
+      : [emptyItem(key === 'exclusions' ? 'No saved exclusions yet. Add a tag below, or exclude one from a work on AO3.' : 'No muted authors. Mute someone from a work’s Sift panel, or add a user name below.')]));
   }
   $('ships').replaceChildren(...(cfg.ships.length
     ? cfg.ships.map((ship, i) => {
@@ -56,7 +60,7 @@ function render() {
         save({ ships: cfg.ships.map((s, j) => (j === i ? { ...s, firstTwo: select.value === 'two' } : s)) }));
       return el('li', [el('span', ship.name), el('span', [select, button('Remove', `Remove ${ship.name}`, () => removeFrom('ships', i))], { class: 'actions' })]);
     })
-    : [el('li', el('span', 'No saved ships yet.'))]));
+    : [emptyItem('No saved ships yet. Open a relationship tag’s works page and turn the filter on in the Sift bar.')]));
   const kept = L.cleanKept(cfg.kept);
   const keptRows = KEPT_ROWS.filter(([, keys]) => kept[keys[0]] || kept[keys[1]]);
   $('kept').replaceChildren(...(keptRows.length
@@ -64,7 +68,7 @@ function render() {
       const text = L.describeKept(Object.fromEntries(keys.filter(k => kept[k]).map(k => [k, kept[k]])));
       return el('li', [el('span', `${title}: ${text}`), button('Remove', `Remove ${title.toLowerCase()} filter`, () => removeKept(keys))]);
     })
-    : [el('li', el('span', 'No kept filters yet.'))]));
+    : [emptyItem('No kept filters yet. Filter a listing with AO3’s sidebar, then press “Keep on every listing”.')]));
   $('autoApply').checked = cfg.autoApply;
   $('removeHidden').checked = cfg.removeHidden;
 }
@@ -72,6 +76,12 @@ function render() {
 function button(text, label, onClick) {
   const b = el('button', text, { type: 'button', 'aria-label': label });
   b.addEventListener('click', onClick);
+  return b;
+}
+
+function chipButton(text, label, onClick) {
+  const b = button(text, label, onClick);
+  b.classList.add('chip-x');
   return b;
 }
 

@@ -324,7 +324,21 @@ await step('popup shows this page\'s counts; its switch turns Sift off and on', 
   await ext.goto(POPUP); // loads in the background tab, so the listing is the active tab
   await ext.locator('#page', { hasText: '3 of 10' }).waitFor();
   assert.equal(await ext.locator('#total').textContent(), '3');
-  await ext.screenshot({ path: path.join(root, 'store', '5-popup.png') });
+  const card = await ext.locator('body').screenshot();
+  const frame = await desk.context.newPage();
+  await frame.setViewportSize({ width: 1280, height: 800 });
+  await frame.setContent(`<!DOCTYPE html><body style="margin:0;width:1280px;height:800px;display:flex;align-items:center;justify-content:center;gap:48px;
+    background:radial-gradient(900px 480px at 15% -10%, #f6e4ea, transparent 50%), #f4efe6;color:#241c16;font-family:Georgia,serif">
+    <img alt="Sift popup" style="width:360px;border-radius:18px;box-shadow:0 24px 60px rgba(54,32,24,.14);background:#fffdf8">
+    <div style="max-width:420px">
+      <p style="margin:0;font-family:system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;font-size:13px;color:#8d6a2f">Toolbar</p>
+      <h2 style="margin:.3em 0;font-size:42px;font-weight:500">See what Sift hid</h2>
+      <p style="font-family:system-ui,sans-serif;font-size:18px;line-height:1.45;color:#5c5146">Counts for this page and in total, one switch, and the shortcut.</p>
+    </div></body>`);
+  await frame.locator('img').evaluate((img, b64) => { img.src = 'data:image/png;base64,' + b64; }, card.toString('base64'));
+  await frame.locator('img').evaluate(img => img.decode?.() || null);
+  await frame.screenshot({ path: path.join(root, 'store', '5-popup.png') });
+  await frame.close();
   await ext.locator('#enabled').uncheck();
   await page.waitForFunction(() => document.documentElement.classList.contains('sift-off'));
   assert.deepEqual(await collapsed(page), []);
@@ -345,6 +359,9 @@ await step('options page shows saved exclusions, muted authors and ships (store 
   assert.equal(await ext.locator('#ships select').inputValue(), 'two');
   assert.ok(await ext.locator('#autoApply').isChecked());
   await ext.screenshot({ path: path.join(root, 'store', '4-options.png') });
+  await ext.emulateMedia({ colorScheme: 'dark' });
+  await ext.screenshot({ path: path.join(root, 'store', '6-options-dark.png') });
+  await ext.emulateMedia({ colorScheme: 'light' });
 });
 await desk.context.close();
 
@@ -375,4 +392,13 @@ await step('no exceptions or console errors from the extension', async () => {
   assert.deepEqual(errors, []);
 });
 console.log(`\n${passed} passed, ${failed} failed`);
+if (!failed) {
+  const names = ['1-primary-ship.png', '2-exclude-from-panel.png', '3-hidden-listing.png', '4-options.png', '5-popup.png', '6-options-dark.png', 'promo-440x280.png'];
+  for (const name of names) {
+    const from = path.join(root, name === 'promo-440x280.png' ? 'store' : 'store', name);
+    fs.copyFileSync(path.join(root, 'store', name), path.join(root, 'docs', 'design', 'after', name));
+    fs.copyFileSync(path.join(root, 'store', name), path.join(root, 'tests', 'visual', name));
+  }
+  console.log('copied visual baselines to docs/design/after and tests/visual');
+}
 process.exit(failed ? 1 : 0);

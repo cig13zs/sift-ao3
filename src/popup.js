@@ -17,6 +17,8 @@ function syncSwitch(enabled) {
   const box = $('enabled');
   box.checked = enabled;
   box.setAttribute('aria-checked', String(enabled));
+  const state = $('switch-state');
+  if (state) state.textContent = enabled ? 'On' : 'Off';
 }
 
 function showCounts(state) {

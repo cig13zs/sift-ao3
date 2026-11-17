@@ -1,6 +1,6 @@
 # Privacy policy
 
-Sift for AO3, version 1.1.0. Last updated 2026-10-23.
+Sift for AO3, version 1.2.0. Last updated 2026-11-17.
 
 Sift is a browser extension that runs on archiveofourown.org. It has no account, no
 server of its own, no analytics and no ads.

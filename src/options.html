@@ -8,17 +8,22 @@
 </head>
 <body class="options">
 <main>
-  <h1>Sift for AO3</h1>
-  <p class="hint">Sift saves everything on this page in this browser only. It has no account, no server and no tracking.</p>
+  <header class="mast">
+    <img src="icons/icon128.png" width="56" height="56" alt="">
+    <div>
+      <h1>Sift for AO3</h1>
+      <p class="hint lede">Everything on this page stays in this browser. No account, no server, no tracking.</p>
+    </div>
+  </header>
 
   <section aria-labelledby="h-exclusions">
     <h2 id="h-exclusions">Saved exclusions</h2>
     <p>Tags left out of every AO3 listing and search you open. Sift adds them to AO3's own filter, so tags with the same meaning are excluded too and each page stays full.</p>
-    <ul id="exclusions" class="names" aria-labelledby="h-exclusions"></ul>
+    <ul id="exclusions" class="names chips" aria-labelledby="h-exclusions"></ul>
     <form class="add" data-list="exclusions">
       <label for="add-exclusions">Add tags</label>
       <textarea id="add-exclusions" rows="2" placeholder="One per line, or separated by commas"></textarea>
-      <button type="submit">Add</button>
+      <button type="submit" class="primary">Add</button>
       <p class="status hint" role="status"></p>
     </form>
   </section>
@@ -26,11 +31,11 @@
   <section aria-labelledby="h-muted">
     <h2 id="h-muted">Muted authors</h2>
     <p>Works by these AO3 users collapse on every listing, whichever pseud they post under. If you log in to AO3, its own muting (in your AO3 preferences) works too.</p>
-    <ul id="mutedAuthors" class="names" aria-labelledby="h-muted"></ul>
+    <ul id="mutedAuthors" class="names chips" aria-labelledby="h-muted"></ul>
     <form class="add" data-list="mutedAuthors">
       <label for="add-mutedAuthors">Add AO3 user names</label>
       <textarea id="add-mutedAuthors" rows="2" placeholder="One per line, or separated by commas"></textarea>
-      <button type="submit">Add</button>
+      <button type="submit" class="primary">Add</button>
       <p class="status hint" role="status"></p>
     </form>
   </section>
@@ -38,27 +43,27 @@
   <section aria-labelledby="h-kept">
     <h2 id="h-kept" tabindex="-1">Kept AO3 filters</h2>
     <p>Filters from AO3's own sidebar that Sift adds to every work listing and search, like your exclusions. To keep some, filter a listing with AO3's sidebar (for example complete works only, a language or a word count) and press "Keep on every listing" in the Sift bar.</p>
-    <ul id="kept" class="names" aria-labelledby="h-kept"></ul>
+    <ul id="kept" class="names rows" aria-labelledby="h-kept"></ul>
   </section>
   <section aria-labelledby="h-ships">
     <h2 id="h-ships" tabindex="-1">Saved ships</h2>
     <p>The primary ship filter turns on by itself on these relationship tag pages. To add one, open the ship's works page and tick "Only works where this ship is listed first" in the Sift bar.</p>
-    <ul id="ships" class="names" aria-labelledby="h-ships"></ul>
+    <ul id="ships" class="names rows" aria-labelledby="h-ships"></ul>
   </section>
 
   <section aria-labelledby="h-behaviour">
     <h2 id="h-behaviour">Behaviour</h2>
-    <p><label class="check"><input type="checkbox" id="autoApply"> Always apply my saved filters automatically</label></p>
+    <p><label class="switch"><input type="checkbox" id="autoApply"><span class="track" aria-hidden="true"></span><span>Always apply my saved filters automatically</span></label></p>
     <p class="hint">Keyboard shortcut: <kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> toggles Sift on or off (customize at <code>chrome://extensions/shortcuts</code>).</p>
     <p class="hint">When a listing opens without them (a typed address or an outside link), Sift reloads it once with your exclusions and kept filters. It never reloads the same page twice, and never after you use AO3's own filter form.</p>
-    <p><label class="check"><input type="checkbox" id="removeHidden"> Remove hidden works entirely instead of collapsing them</label></p>
+    <p><label class="switch"><input type="checkbox" id="removeHidden"><span class="track" aria-hidden="true"></span><span>Remove hidden works entirely instead of collapsing them</span></label></p>
   </section>
 
   <section aria-labelledby="h-backup">
     <h2 id="h-backup">Back up and move</h2>
     <p>Export saves your lists and settings as a JSON file. Import adds a backup to what you already have; it never removes anything.</p>
     <p class="row">
-      <button type="button" id="export">Export JSON</button>
+      <button type="button" id="export" class="primary">Export JSON</button>
       <button type="button" id="import-button">Import JSON</button>
       <input type="file" id="import" accept="application/json,.json" hidden>
     </p>

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.0 - 2026-11-17
+
+### Design
+
+- Warm paper-and-wine design system (spacing, type, radius, light and dark themes) for the popup and options.
+- Crafted switches, chips, and empty states. Motion follows `prefers-reduced-motion`.
+- In-page bar and panels use rounded chips and a wine accent that stays readable on AO3 skins.
+- New extension icon and Chrome Web Store tile (440×280). Store screenshots refreshed at 1280×800.
+
 ## 1.1.1 - 2026-11-17
 
 ### Security

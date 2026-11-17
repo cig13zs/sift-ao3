@@ -199,6 +199,7 @@ async function main(state) {
           if (b.li.classList.contains('sift-collapsed')) b.barBtn.focus();
           else if (b.li.classList.contains('sift-removed')) ui.showAll.focus();
         });
+        t.classList.add('sift-chip');
         b.toggles.push({ t, key, label, pressedText, idleText });
         return el('li', null, [el('span', 'sift-name', label), t]);
       };

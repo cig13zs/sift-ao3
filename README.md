@@ -74,7 +74,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## Changelog
 
-See [CHANGELOG.md](CHANGELOG.md). Latest store-facing release in this repo: **1.1.1**.
+See [CHANGELOG.md](CHANGELOG.md). Latest store-facing release in this repo: **1.2.0**.
 
 ## Security
 
