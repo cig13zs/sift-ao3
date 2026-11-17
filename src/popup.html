@@ -7,15 +7,26 @@
 </head>
 <body class="popup">
   <header class="top">
-    <h1>Sift for AO3</h1>
-    <label class="check"><input type="checkbox" id="enabled" role="switch"> On</label>
+    <div class="brand">
+      <img src="icons/icon32.png" width="36" height="36" alt="">
+      <h1 id="title"><span class="kicker">AO3</span>Sift</h1>
+    </div>
+    <label class="switch">
+      <input type="checkbox" id="enabled" role="switch" aria-labelledby="title">
+      <span class="track" aria-hidden="true"></span>
+      <span class="state" id="switch-state">On</span>
+    </label>
   </header>
-  <dl class="counts">
+  <dl class="counts" aria-label="Hidden works counts">
     <div><dt>Hidden on this page</dt><dd id="page">–</dd></div>
     <div><dt>Hidden in total</dt><dd id="total">0</dd></div>
   </dl>
-  <p id="note" class="note" hidden></p>
-  <p><button type="button" id="options">Options</button></p>
+  <p id="note" class="note" hidden role="status"></p>
+  <p id="hint" class="hint" hidden></p>
+  <p class="row">
+    <button type="button" id="options" class="primary">Options</button>
+    <span class="hint" id="shortcut" title="Change in chrome://extensions/shortcuts">Alt+Shift+S</span>
+  </p>
   <footer><a href="https://ko-fi.com/jju1s" target="_blank" rel="noopener noreferrer">Support on Ko-fi</a></footer>
   <script src="popup.js"></script>
 </body>

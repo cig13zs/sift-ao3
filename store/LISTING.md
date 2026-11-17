@@ -1,6 +1,6 @@
-# Store listing: Sift for AO3 1.1.0
+# Store listing: Sift for AO3 1.2.0
 
-Both packages come from `node build.mjs` (`dist/sift-ao3-1.1.0-chrome.zip` and `-firefox.zip`). The title and summary come from each
+Both packages come from `node build.mjs` (`dist/sift-ao3-1.2.0-chrome.zip` and `-firefox.zip`). The title and summary come from each
 package's manifest, so there's nothing to type for them.
 
 ## Description (both stores)
@@ -34,7 +34,7 @@ package's manifest, so there's nothing to type for them.
 
 ## Chrome Web Store
 
-- Package: `sift-ao3-1.1.0-chrome.zip`
+- Package: `sift-ao3-1.2.0-chrome.zip`
 - Title from the package: `Sift for AO3: tag blocker, author mute & primary ship filter`
 - Summary from the package: `Make your AO3 filters stick: excluded tags on every search, muted authors, and only fics where your ship comes first.`
 - Category: Lifestyle > Entertainment. Language: English.
@@ -61,7 +61,7 @@ Privacy tab:
 
 ## Firefox Add-ons
 
-- Package: `sift-ao3-1.1.0-firefox.zip`. Tick Firefox for Android as well; the manifest
+- Package: `sift-ao3-1.2.0-firefox.zip`. Tick Firefox for Android as well; the manifest
   supports it.
 - Name from the package: `Sift for AO3: tag blocker & primary ship filter` (AMO allows 50
   characters).

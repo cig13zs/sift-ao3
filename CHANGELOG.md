@@ -1,5 +1,39 @@
 # Changelog
 
+## 1.2.0 - 2026-11-17
+
+### Design
+
+- Warm paper-and-wine design system (spacing, type, radius, light and dark themes) for the popup and options.
+- Crafted switches, chips, and empty states. Motion follows `prefers-reduced-motion`.
+- In-page bar and panels use rounded chips and a wine accent that stays readable on AO3 skins.
+- New extension icon and Chrome Web Store tile (440×280). Store screenshots refreshed at 1280×800.
+
+## 1.1.1 - 2026-11-17
+
+### Security
+
+- Strict Content Security Policy on extension pages (`script-src 'self'` only; no remote code).
+- Content script answers popup state requests only from this extension, not other senders.
+- Build and CI lint checks keep permissions limited to `storage` and AO3 host access.
+
+### Bugs and robustness
+
+- Ship synonym parsing tolerates alternate AO3 listbox class order and nested markup.
+- Tag profile detection accepts `class` strings where words are not in a fixed order.
+- E2e harness uses faster asset timeouts and `domcontentloaded` so CI navigation does not hang.
+
+### UI, ease of use, accessibility
+
+- Popup: first-run hint, live refresh when settings change, clearer non-AO3 tab messaging, shortcut note.
+- Popup switch exposes `aria-checked`; counts region is labelled for screen readers.
+- Options: keyboard shortcut documented; auto-apply label mentions kept filters.
+- **Alt+Shift+S** toggles Sift on or off (change at `chrome://extensions/shortcuts`).
+
+### Repository
+
+- README, CONTRIBUTING, issue/PR templates, and CI (`lint`, unit tests, `build`).
+
 ## 1.1.0 - 2026-10-23
 
 - Keep AO3's sidebar filters on every listing. After filtering a works page with AO3's own

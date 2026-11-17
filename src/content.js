@@ -4,8 +4,10 @@
 {
   // Registered before anything can fail, so the popup can always say what happened on this page.
   const state = { hidden: 0, total: 0, unreadable: false };
-  chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
-    if (msg === 'sift-state') reply(state);
+  chrome.runtime.onMessage.addListener((msg, sender, reply) => {
+    if (msg !== 'sift-state') return;
+    if (sender.id !== chrome.runtime.id) return;
+    reply(state);
   });
   main(state).catch(() => { state.unreadable = true; });
 }
@@ -197,6 +199,7 @@ async function main(state) {
           if (b.li.classList.contains('sift-collapsed')) b.barBtn.focus();
           else if (b.li.classList.contains('sift-removed')) ui.showAll.focus();
         });
+        t.classList.add('sift-chip');
         b.toggles.push({ t, key, label, pressedText, idleText });
         return el('li', null, [el('span', 'sift-name', label), t]);
       };

@@ -1,0 +1,34 @@
+name: Bug report
+description: Something broke or looks wrong on AO3 or in the extension UI
+labels: ["bug"]
+body:
+  - type: textarea
+    id: describe
+    attributes:
+      label: What happened?
+      description: Include the AO3 page URL (works listing, tag page, etc.) if it applies.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Sift version
+      description: From chrome://extensions or the store listing
+    validations:
+      required: false
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      options:
+        - Chrome
+        - Edge
+        - Brave
+        - Firefox
+        - Other

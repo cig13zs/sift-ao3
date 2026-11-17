@@ -26,6 +26,7 @@ const targets = {
 function check(name, m, dir) {
   const files = [
     ...Object.values(m.icons), ...Object.values(m.action.default_icon), m.action.default_popup, m.options_ui.page,
+    ...(m.background?.service_worker ? [m.background.service_worker] : []),
     ...m.content_scripts.flatMap(c => [...c.js, ...(c.css || [])]),
   ];
   const missing = files.filter(f => !fs.existsSync(path.join(dir, f)));
@@ -35,6 +36,11 @@ function check(name, m, dir) {
     m.name.length > (name === 'firefox' ? 50 : 75) && 'name is too long for the store',
     m.description.length > 132 && 'description is over 132 characters',
     !/^\d+(\.\d+){0,3}$/.test(m.version) && 'version is not dotted numbers',
+    m.permissions?.length !== 1 && 'permissions must be exactly storage',
+    m.permissions?.[0] !== 'storage' && 'only the storage permission is allowed',
+    m.host_permissions?.join() !== 'https://archiveofourown.org/*' && 'host_permissions must be AO3 only',
+    !m.content_security_policy?.extension_pages?.includes("script-src 'self'") && 'extension_pages CSP must restrict script-src',
+    m.content_security_policy?.extension_pages?.includes('unsafe-eval') && 'CSP must not allow unsafe-eval',
   ].filter(Boolean);
   if (problems.length) throw new Error(`${name} manifest: ${problems.join('; ')}`);
 }
