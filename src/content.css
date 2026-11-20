@@ -19,6 +19,8 @@ html.sift-off .sift-ui,
   align-items: center;
   gap: 0.4em 0.75em;
   margin: 0.3em 0;
+  min-width: 0;
+  max-width: 100%;
 }
 .sift-bar strong {
   font-weight: 600;
@@ -57,7 +59,32 @@ a.sift-btn { display: inline-flex; align-items: center; text-decoration: none; }
   border-color: #8a3a56;
 }
 
-.sift-open { float: right; margin: 0.2em 0 0 0.6em; letter-spacing: 0.03em; }
+.sift-open, .sift-later { float: right; margin: 0.2em 0 0 0.4em; letter-spacing: 0.03em; }
+.sift-bar, .sift-panel, .sift-hidebar, .sift-btn { box-sizing: border-box; max-width: 100%; }
+.sift-bar .sift-btn, .sift-actions .sift-btn { white-space: normal; text-align: center; }
+.sift-actions { display: flex; flex-wrap: wrap; gap: 0.4em; margin-top: 0.65em; }
+.sift-pick { width: 1.05em; height: 1.05em; margin: 0; accent-color: #8a3a56; flex: none; }
+.sift-badge {
+  display: inline-block;
+  margin-left: 0.4em;
+  padding: 0.05em 0.5em;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+  font-size: 0.7em;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: 0.15em;
+}
+li.blurb.sift-fresh { box-shadow: inset 3px 0 0 #8d6a2f; }
+dl.stats dt.sift-ratio, dl.stats dt.sift-time,
+dl.stats dd.sift-ratio, dl.stats dd.sift-time {
+  float: none;
+  clear: both;
+  display: block;
+  max-width: 100%;
+  font-weight: 600;
+}
 
 li.blurb.sift-collapsed > :not(.sift-hidebar) { display: none !important; }
 li.blurb.sift-collapsed { min-height: 0 !important; padding-top: 0.35em !important; padding-bottom: 0.35em !important; }

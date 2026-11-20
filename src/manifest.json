@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "Sift for AO3: tag blocker, author mute & primary ship filter",
+  "name": "Sift for AO3: block tags, mute authors, filter ships",
   "short_name": "Sift",
-  "version": "1.2.0",
-  "description": "Make your AO3 filters stick: excluded tags on every search, muted authors, and only fics where your ship comes first.",
+  "version": "2.0.0",
+  "description": "Block tags, mute authors, and keep your ship first on every AO3 search. See kudos rates and hide fics you already opened.",
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
@@ -30,7 +30,7 @@
   "content_scripts": [
     {
       "matches": ["https://archiveofourown.org/*"],
-      "js": ["lib/sift.js", "content.js"],
+      "js": ["lib/sift.js", "lib/storage.js", "content.js"],
       "css": ["content.css"],
       "run_at": "document_idle"
     }

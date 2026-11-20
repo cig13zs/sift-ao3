@@ -1,3 +1,4 @@
+const L = globalThis.SiftLib;
 const $ = id => document.getElementById(id);
 
 async function tabState() {
@@ -40,11 +41,28 @@ function showCounts(state) {
   note.hidden = false;
 }
 
+function showLater(list) {
+  const block = $('later-block');
+  const items = (list || []).slice(0, 3);
+  block.hidden = !items.length;
+  $('later').replaceChildren(...items.map(item => {
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = 'https://archiveofourown.org/works/' + item.id;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.textContent = item.title;
+    li.append(a);
+    return li;
+  }));
+}
+
 (async () => {
-  const stored = await chrome.storage.local.get(['enabled', 'stats']);
-  const enabled = stored.enabled !== false;
+  const stored = await globalThis.SiftStore.load();
+  const enabled = stored.settings.enabled !== false;
   syncSwitch(enabled);
   $('total').textContent = (stored.stats?.hiddenTotal || 0).toLocaleString();
+  showLater(stored.later);
 
   if (!stored.stats?.firstUse) {
     $('hint').textContent = 'First visit: open a works listing, press Sift on any fic, or use Options to add exclusions.';
@@ -54,7 +72,7 @@ function showCounts(state) {
   $('enabled').addEventListener('change', e => {
     const on = e.target.checked;
     syncSwitch(on);
-    chrome.storage.local.set({ enabled: on });
+    globalThis.SiftStore.saveSettings({ enabled: on });
   });
   $('options').addEventListener('click', () => chrome.runtime.openOptionsPage());
 
@@ -66,5 +84,6 @@ function showCounts(state) {
     if (changes.stats?.newValue?.hiddenTotal != null) {
       $('total').textContent = changes.stats.newValue.hiddenTotal.toLocaleString();
     }
+    if ('later' in changes) showLater(L.cleanLater(changes.later.newValue || []));
   });
 })();

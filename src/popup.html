@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sift for AO3</title>
 <link rel="stylesheet" href="ui.css">
 </head>
@@ -23,11 +24,17 @@
   </dl>
   <p id="note" class="note" hidden role="status"></p>
   <p id="hint" class="hint" hidden></p>
+  <section id="later-block" hidden aria-labelledby="later-heading">
+    <h2 id="later-heading">Saved for later</h2>
+    <ul id="later"></ul>
+  </section>
   <p class="row">
     <button type="button" id="options" class="primary">Options</button>
     <span class="hint" id="shortcut" title="Change in chrome://extensions/shortcuts">Alt+Shift+S</span>
   </p>
   <footer><a href="https://ko-fi.com/jju1s" target="_blank" rel="noopener noreferrer">Support on Ko-fi</a></footer>
+  <script src="lib/sift.js"></script>
+  <script src="lib/storage.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

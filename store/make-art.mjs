@@ -40,7 +40,7 @@ await page.setContent(`<!DOCTYPE html><body style="margin:0;width:440px;height:2
     box-shadow:inset 0 0 0 1px rgba(255,248,241,.2);display:grid;place-items:center">${mark(92, false).replace(WINE, CREAM)}</div>
   <div style="font-family:'Segoe UI',system-ui,sans-serif">
     <div style="font-family:Georgia,serif;font-size:30px;line-height:1.05;letter-spacing:-.02em">Sift for AO3</div>
-    <div style="margin-top:10px;font-size:14px;line-height:1.45;color:${GOLD}">Your ship first.<br>Tags that stay excluded.<br>Authors, quietly muted.</div>
+    <div style="margin-top:10px;font-size:14px;line-height:1.45;color:${GOLD}">Your ship first.<br>Tags and authors kept out.<br>Kudos rates. Fics you've opened.</div>
   </div>
 </body>`);
 await page.screenshot({ path: path.join(root, 'store', 'promo-440x280.png') });
