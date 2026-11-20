@@ -1,5 +1,30 @@
 # Changelog
 
+## 2.0.0 - 2026-11-20
+
+Readers keep asking AO3 for things the site still does not do: mark fics as read and filter them out, sort by kudos divided by hits, and see length and freshness while browsing. AO3 Savior and AO3 Enhancer hide tags and authors, and a few userscripts add a kudos rate, but none of them keep exclusions inside AO3's own filter, and most of them need a userscript manager. This release stays on Sift's job — filtering and browsing — and adds the gaps that fit that job.
+
+The name stays **Sift**. The extension is already published under it, and the word is the action: sift a tag until the works you want are what's left. The store title now says the job in the remaining characters.
+
+### Filters and browsing
+
+- Kudos per hit on each work, as a percentage of hits that left a kudos, plus an estimated reading time from your words-per-minute setting. Optional sort of the works already on the page. It is a browsing hint, not a score, and nothing about it leaves the device.
+- Hide unfinished works, works outside a word-count range, or works not updated in a chosen number of days. Highlight works updated recently. These run on the page, including bookmark listings.
+- Remember works you open, only after you turn it on. Listings can mark them Opened or hide them. The newest 2,000 ids are kept, on this device only.
+- Saved for later: a private list with a Later button on listings and fic pages, separate from AO3 bookmarks.
+- Named presets for exclusions, muted authors, ships, kept filters, and the on-the-page rules.
+- From a listing or a fic page, exclude the tags you tick, or every additional tag on that work, in one step.
+
+### Sync, backups, and existing settings
+
+- Optional sync through the browser account you already use (`chrome.storage.sync` under the existing `storage` permission). Off by default. Opened works, saved-for-later, stats, and the ship-name cache stay on the device. Turning it on unites lists with the other device instead of replacing either side. Turning it off deletes the synced copy. A list over the browser's per-item limit (about 8 KB) stays local and the options page says so.
+- Existing saved exclusions, muted authors, ships, kept filters, and toggles are kept. New rules default to off, except the two displays (kudos rate and reading time), which can be turned off in options. Version 1 backups still import. Exports are version 2 and do not turn sync on.
+
+### Listing
+
+- Store title: `Sift for AO3: block tags, mute authors, filter ships`. Firefox name, within the 50-character cap: `Sift for AO3: tag, author & ship filter`.
+- Popup uses the width it is given, including a 320px-wide window, and lists up to three saved-for-later works.
+
 ## 1.2.0 - 2026-11-17
 
 ### Design

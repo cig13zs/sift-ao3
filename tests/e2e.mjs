@@ -148,7 +148,11 @@ const getStore = keys => ext.evaluate(k => chrome.storage.local.get(k), keys);
 async function reset(settings) {
   tagFetches = 0;
   dropQuery = false;
-  await ext.evaluate(async s => { await chrome.storage.local.clear(); await chrome.storage.local.set(s); }, settings);
+  await ext.evaluate(async s => {
+    await chrome.storage.local.clear();
+    await chrome.storage.sync.clear();
+    if (s && Object.keys(s).length) await chrome.storage.local.set(s);
+  }, settings);
 }
 
 await step('first run: Sift bar with tip, a Sift button on every work, nothing hidden', async () => {
@@ -339,6 +343,11 @@ await step('popup shows this page\'s counts; its switch turns Sift off and on', 
   await frame.locator('img').evaluate(img => img.decode?.() || null);
   await frame.screenshot({ path: path.join(root, 'store', '5-popup.png') });
   await frame.close();
+  await ext.setViewportSize({ width: 320, height: 700 });
+  await ext.goto(POPUP);
+  await ext.locator('#title').waitFor();
+  assert.equal(await ext.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1), true);
+  await ext.setViewportSize({ width: 1280, height: 800 });
   await ext.locator('#enabled').uncheck();
   await page.waitForFunction(() => document.documentElement.classList.contains('sift-off'));
   assert.deepEqual(await collapsed(page), []);
@@ -359,10 +368,100 @@ await step('options page shows saved exclusions, muted authors and ships (store 
   assert.equal(await ext.locator('#ships select').inputValue(), 'two');
   assert.ok(await ext.locator('#autoApply').isChecked());
   await ext.screenshot({ path: path.join(root, 'store', '4-options.png') });
+  await ext.locator('#h-browse').scrollIntoViewIfNeeded();
+  await ext.screenshot({ path: path.join(root, 'store', '7-on-the-page.png') });
+  await ext.evaluate(() => window.scrollTo(0, 0));
   await ext.emulateMedia({ colorScheme: 'dark' });
   await ext.screenshot({ path: path.join(root, 'store', '6-options-dark.png') });
   await ext.emulateMedia({ colorScheme: 'light' });
 });
+await step('kudos per hit, reading time, and sorting this page only', async () => {
+  await reset({});
+  await page.goto(LISTING);
+  await page.locator('#work_101 dd.sift-ratio').waitFor();
+  assert.match(await page.locator('#work_101 dd.sift-ratio').textContent(), /^(?:\d+\.\d%|<0\.1%)$/);
+  assert.match(await page.locator('#work_101 dd.sift-time').textContent(), /^\d+ min$/);
+  await page.getByRole('button', { name: 'Sort this page by kudos per hit' }).click();
+  await page.getByRole('button', { name: "Back to AO3's order" }).waitFor();
+  const ratios = await page.$$eval('li.work.blurb', els => els.map(li => {
+    const num = sel => Number(li.querySelector(sel).textContent.replace(/,/g, ''));
+    return num('dd.kudos') / num('dd.hits');
+  }));
+  for (let i = 1; i < ratios.length; i++) assert.ok(ratios[i - 1] >= ratios[i] - 1e-9);
+  await page.getByRole('button', { name: "Back to AO3's order" }).click();
+  await page.getByRole('button', { name: 'Sort this page by kudos per hit' }).waitFor();
+});
+
+await step('hide by word count, and hide works already opened', async () => {
+  await reset({ browse: { wordsFrom: '20000' } });
+  await page.goto(LISTING);
+  await waitCount(page, 10);
+  assert.match(await page.locator('.sift-hidebar span').first().textContent(), /under 20,000 words/);
+
+  await reset({ browse: { hideRead: true }, readWorks: { '102': 1, '110': 1 } });
+  await page.goto(LISTING);
+  await waitCount(page, 2);
+  assert.deepEqual(await collapsed(page), [102, 110]);
+  assert.match(await page.locator('#work_102 .sift-hidebar span').textContent(), /already opened/);
+});
+
+await step('opened badge, save for later, and bulk-exclude additional tags', async () => {
+  await reset({ browse: { trackReads: true }, readWorks: { '101': 1 } });
+  await page.goto(LISTING);
+  await waitCount(page, 0);
+  await page.locator('#work_101 .sift-opened', { hasText: 'Opened' }).waitFor();
+  await page.locator('#work_101').getByRole('button', { name: 'Save for later' }).click();
+  await page.locator('#work_101').getByRole('button', { name: 'Saved for later' }).waitFor();
+  assert.equal((await getStore('later')).later[0].id, '101');
+  await page.locator('#work_101 .sift-open').click();
+  await page.locator('#work_101').getByRole('button', { name: 'Exclude all additional tags' }).click();
+  await page.locator('#work_101').getByText('Excluded 3 additional tags').waitFor();
+  assert.deepEqual((await getStore('exclusions')).exclusions.slice().sort(), ['Found Family', 'Lighthouses', 'Slow Burn']);
+});
+
+await step('work page remembers the open and can exclude every additional tag', async () => {
+  await reset({ browse: { trackReads: true } });
+  await page.goto(AO3 + '/works/101');
+  await page.locator('.sift-bar .sift-opened', { hasText: 'Opened' }).waitFor();
+  assert.ok((await getStore('readWorks')).readWorks['101']);
+  await page.getByRole('button', { name: 'Sift options for this work' }).click();
+  await page.getByRole('button', { name: 'Exclude all additional tags' }).click();
+  await page.getByText('Excluded 3 additional tags').waitFor();
+  await page.getByRole('button', { name: 'Save for later' }).click();
+  await page.getByRole('button', { name: 'Saved for later' }).waitFor();
+});
+
+await step('presets save and reapply a set of filters', async () => {
+  await reset({ exclusions: ['Fluff'], mutedAuthors: ['quill_moth'] });
+  await ext.goto(OPTIONS);
+  await ext.bringToFront();
+  await ext.locator('#preset-name').fill('Keldra');
+  await ext.locator('#preset-form button[type="submit"]').click();
+  await ext.locator('#presets li', { hasText: 'Keldra' }).waitFor();
+  await ext.getByRole('button', { name: 'Remove Fluff' }).click();
+  await ext.locator('#exclusions li', { hasText: 'Fluff' }).waitFor({ state: 'detached' });
+  await ext.getByRole('button', { name: 'Apply Keldra' }).click();
+  await ext.locator('#exclusions li', { hasText: 'Fluff' }).waitFor();
+  assert.deepEqual((await getStore('exclusions')).exclusions, ['Fluff']);
+  await page.bringToFront();
+});
+
+await step('opt-in browser sync restores lists on an empty profile', async () => {
+  await reset({});
+  await ext.goto(OPTIONS);
+  await ext.bringToFront();
+  await ext.locator('#syncEnabled').check();
+  await ext.waitForFunction(() => chrome.storage.local.get('syncEnabled').then(v => v.syncEnabled === true));
+  await ext.locator('#add-exclusions').fill('Songfic');
+  await ext.locator('form[data-list="exclusions"] button[type="submit"]').click();
+  await ext.waitForFunction(() => chrome.storage.sync.get('sift-exclusions').then(v => (v['sift-exclusions'] || []).includes('Songfic')));
+  await ext.evaluate(() => chrome.storage.local.clear());
+  await ext.reload();
+  await ext.locator('#exclusions li', { hasText: 'Songfic' }).waitFor();
+  assert.equal(await ext.locator('#syncEnabled').isChecked(), true);
+  await page.bringToFront();
+});
+
 await desk.context.close();
 
 // ---- Phone, 390x844 with touch ----
@@ -393,7 +492,7 @@ await step('no exceptions or console errors from the extension', async () => {
 });
 console.log(`\n${passed} passed, ${failed} failed`);
 if (!failed) {
-  const names = ['1-primary-ship.png', '2-exclude-from-panel.png', '3-hidden-listing.png', '4-options.png', '5-popup.png', '6-options-dark.png', 'promo-440x280.png'];
+  const names = ['1-primary-ship.png', '2-exclude-from-panel.png', '3-hidden-listing.png', '4-options.png', '5-popup.png', '6-options-dark.png', '7-on-the-page.png', 'promo-440x280.png'];
   for (const name of names) {
     const from = path.join(root, name === 'promo-440x280.png' ? 'store' : 'store', name);
     fs.copyFileSync(path.join(root, 'store', name), path.join(root, 'docs', 'design', 'after', name));

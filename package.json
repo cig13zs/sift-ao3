@@ -1,8 +1,8 @@
 {
   "name": "sift-ao3",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Make your AO3 filters stick: excluded tags on every search, muted authors, and only fics where your ship comes first.",
+  "description": "Block tags, mute authors, and keep your ship first on every AO3 search. See kudos rates and hide fics you already opened.",
   "license": "MIT",
   "type": "commonjs",
   "scripts": {

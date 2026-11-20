@@ -14,10 +14,14 @@
 
 async function main(state) {
   const L = globalThis.SiftLib;
-  const KEYS = Object.keys(L.DEFAULTS);
+  const Store = globalThis.SiftStore;
   const HOUR = 36e5;
-  let cfg = { ...L.DEFAULTS, ...(await chrome.storage.local.get(KEYS)) };
+  const loaded = await Store.load();
+  let cfg = loaded.settings;
+  let readWorks = loaded.readWorks;
+  let later = loaded.later;
   const kind = L.listingKind(location.href);
+  const pageWorkId = L.workIdFromPath(location.pathname);
 
   // Auto-apply may redirect once per navigation: the flag survives exactly one page load, so a
   // listing reached through our own redirect never redirects again, even if AO3 dropped the filter.
@@ -33,6 +37,14 @@ async function main(state) {
       sessionStorage.setItem('sift-auto', '1');
       location.replace(target);
       return;
+    }
+  }
+
+  if (cfg.enabled && cfg.browse.trackReads && pageWorkId) {
+    const next = L.rememberRead(readWorks, pageWorkId, Date.now());
+    if (JSON.stringify(next) !== JSON.stringify(readWorks)) {
+      readWorks = next;
+      await Store.saveLocal({ readWorks });
     }
   }
 
@@ -56,8 +68,14 @@ async function main(state) {
     const header = li.querySelector(':scope > .header');
     const users = [...li.querySelectorAll(':scope > .header h4.heading a[rel="author"]')]
       .map(a => L.userFromHref(a.getAttribute('href'))).filter(Boolean);
+    const titleA = li.querySelector(':scope > .header h4.heading a[href*="/works/"]')
+      || li.querySelector('h4.heading a[href*="/works/"]');
+    const id = L.workIdFromHref(titleA?.getAttribute('href') || '') || '';
+    const dd = name => (li.querySelector(':scope > dl.stats dd.' + name) || li.querySelector('dl.stats dd.' + name))?.textContent || '';
+    const symbol = li.querySelector(':scope > .header span.complete-yes, :scope > .header span.complete-no');
+    const updatedText = dd('status') || dd('published') || li.querySelector(':scope > .header p.datetime')?.textContent || '';
     return {
-      li, header, i,
+      li, header, i, id,
       isWork: li.classList.contains('work'),
       title: li.querySelector(':scope > .header h4.heading a')?.textContent.trim() || '',
       users: [...new Set(users)],
@@ -69,6 +87,11 @@ async function main(state) {
         ['Characters', texts(':scope > ul.tags li.characters a.tag')],
         ['Additional tags', texts(':scope > ul.tags li.freeforms a.tag')],
       ].filter(g => g[1].length),
+      words: L.parseCount(dd('words')),
+      kudos: L.parseCount(dd('kudos')),
+      hits: L.parseCount(dd('hits')),
+      wip: L.workIsWip(symbol?.getAttribute('title') || '', dd('chapters')),
+      updated: L.parseAo3Date(updatedText),
       hidden: false, revealed: false, bar: null, panel: null,
     };
   });
@@ -94,6 +117,7 @@ async function main(state) {
   let hiddenCount = 0;
   let keptJustNow = false;
   let bar = null;
+  let workUi = null;
   const ui = {};
 
   // One same-origin fetch of the public tag page per ship per week (a failed one retries after an hour).
@@ -124,11 +148,13 @@ async function main(state) {
   }
 
   function reasons(b) {
-    const out = [];
-    const muted = b.users.filter(u => has(cfg.mutedAuthors, u));
-    if (muted.length) out.push('muted author ' + muted.join(', '));
-    if (ship && shipNames && b.isWork && !L.isPrimaryShip(b.relationships, shipNames, ship.firstTwo)) out.push('not primary ship');
-    return out;
+    return L.hideReasons({
+      users: b.users, relationships: b.relationships, isWork: b.isWork,
+      words: b.words, wip: b.wip, updated: b.updated, opened: Boolean(b.id && readWorks[b.id]),
+    }, cfg, {
+      now: Date.now(),
+      ship: ship && shipNames ? { names: shipNames, firstTwo: ship.firstTwo } : null,
+    });
   }
 
   function rewriteLinks() {
@@ -150,6 +176,55 @@ async function main(state) {
     }
   }
 
+  function orderBlurbs() {
+    const parent = blurbs[0]?.li.parentElement;
+    if (!parent) return;
+    const indexes = cfg.enabled && cfg.browse.sortByRatio
+      ? L.orderByRatio(blurbs.map(b => ({ index: b.i, ratio: L.kudosPerHit(b.kudos, b.hits) })))
+      : blurbs.map(b => b.i);
+    for (const i of indexes) parent.append(blurbs[i].li);
+  }
+
+  function statPair(b, cls, label) {
+    const dl = b.li.querySelector(':scope > dl.stats') || b.li.querySelector('dl.stats');
+    if (!dl) return null;
+    let dd = dl.querySelector(':scope > dd.sift-' + cls);
+    let dt = dl.querySelector(':scope > dt.sift-' + cls);
+    if (!dd) {
+      dt = el('dt', 'sift-ui sift-' + cls, label);
+      dd = el('dd', 'sift-ui sift-' + cls, '');
+      dl.append(dt, dd);
+    }
+    return { dt, dd };
+  }
+
+  function badge(b, cls) {
+    if (!b.header) return null;
+    const heading = b.header.querySelector('h4.heading');
+    if (!heading) return null;
+    let node = heading.querySelector(':scope > .sift-badge.sift-' + cls);
+    if (!node) {
+      node = el('span', 'sift-ui sift-badge sift-' + cls, '');
+      heading.append(node);
+    }
+    return node;
+  }
+
+  function syncLaterButton(btn, id, title) {
+    if (!btn) return;
+    const on = L.laterHas(later, id);
+    btn.textContent = on ? 'Saved' : 'Later';
+    btn.setAttribute('aria-pressed', String(on));
+    btn.setAttribute('aria-label', on ? 'Saved for later' : 'Save for later');
+    btn.title = on ? 'Remove ' + (title || 'this work') + ' from saved for later' : 'Save ' + (title || 'this work') + ' for later';
+  }
+
+  async function toggleLater(item, btn) {
+    later = L.toggleLater(later, item, Date.now());
+    syncLaterButton(btn, item.id, item.title);
+    await Store.saveLocal({ later });
+  }
+
   function renderBlurb(b) {
     const why = cfg.enabled ? reasons(b) : [];
     b.hidden = why.length > 0;
@@ -158,6 +233,8 @@ async function main(state) {
     const collapsed = b.hidden && !b.revealed;
     b.li.classList.toggle('sift-collapsed', collapsed && !cfg.removeHidden);
     b.li.classList.toggle('sift-removed', collapsed && cfg.removeHidden);
+    const fresh = cfg.enabled && !b.hidden && L.isFresh(b, cfg.browse, Date.now());
+    b.li.classList.toggle('sift-fresh', fresh);
     if (!b.hidden) {
       b.bar?.remove();
       b.bar = null;
@@ -173,6 +250,33 @@ async function main(state) {
       b.barBtn.textContent = b.revealed ? 'Hide' : 'Show';
       b.barBtn.setAttribute('aria-label', `${b.revealed ? 'Hide' : 'Show'} ${b.title || 'this work'}`);
     }
+    const ratio = statPair(b, 'ratio', 'Kudos/hits:');
+    if (ratio) {
+      const text = cfg.enabled && cfg.browse.showRatio ? L.formatRatio(b.kudos, b.hits) : '';
+      ratio.dd.textContent = text;
+      ratio.dt.hidden = !text;
+      ratio.dd.hidden = !text;
+      if (text) ratio.dd.title = text + ' of hits left a kudos';
+    }
+    const time = statPair(b, 'time', 'Reading time:');
+    if (time) {
+      const text = cfg.enabled && cfg.browse.showReadingTime ? L.formatReadingTime(b.words, cfg.browse.wpm) : '';
+      time.dd.textContent = text;
+      time.dt.hidden = !text;
+      time.dd.hidden = !text;
+    }
+    const opened = badge(b, 'opened');
+    if (opened) {
+      const show = cfg.enabled && cfg.browse.trackReads && b.id && readWorks[b.id] && !b.hidden;
+      opened.hidden = !show;
+      opened.textContent = show ? 'Opened' : '';
+    }
+    const updated = badge(b, 'updated');
+    if (updated) {
+      updated.hidden = !fresh;
+      updated.textContent = fresh ? 'Updated' : '';
+    }
+    syncLaterButton(b.laterBtn, b.id, b.title);
     if (b.panel) renderPanel(b);
   }
 
@@ -180,7 +284,37 @@ async function main(state) {
     const next = has(cfg[key], name) ? cfg[key].filter(x => L.norm(x) !== L.norm(name)) : [...cfg[key], name];
     cfg = { ...cfg, [key]: next };
     render();
-    await chrome.storage.local.set({ [key]: next });
+    cfg = await Store.saveSettings({ [key]: next });
+  }
+
+  async function excludeNames(names) {
+    const fresh = names.filter(n => n && !has(cfg.exclusions, n));
+    if (!fresh.length) return [];
+    const next = [...cfg.exclusions, ...fresh];
+    cfg = { ...cfg, exclusions: next };
+    render();
+    cfg = await Store.saveSettings({ exclusions: next });
+    return fresh;
+  }
+
+  function wirePanel(panel, toggles, status, reload) {
+    const refresh = () => {
+      for (const { t, key, label, pressedText, idleText } of toggles) {
+        const on = has(cfg[key], label);
+        t.textContent = on ? pressedText : idleText;
+        t.setAttribute('aria-label', `${t.textContent} ${label}`);
+        t.setAttribute('aria-pressed', String(on));
+      }
+    };
+    const after = (adding, key, label) => {
+      status.textContent = key === 'mutedAuthors'
+        ? (adding ? `Muted ${label}. Their works are hidden on every listing.` : `${label} is no longer muted.`)
+        : (adding
+          ? `Excluded "${label}". ${kind ? 'Reload this listing to leave it out.' : 'AO3 listings you open will leave it out.'}`
+          : `"${label}" is no longer excluded.`);
+      reload.hidden = !(adding && kind && key === 'exclusions');
+    };
+    return { refresh, after };
   }
 
   function openPanel(b, btn) {
@@ -191,19 +325,20 @@ async function main(state) {
         const t = button(idleText, async () => {
           const adding = !has(cfg[key], label);
           await toggleName(key, label);
-          b.status.textContent = key === 'mutedAuthors'
-            ? (adding ? `Muted ${label}. Their works are hidden on every listing.` : `${label} is no longer muted.`)
-            : (adding ? `Excluded "${label}". ${kind ? 'Reload this listing to leave it out.' : 'AO3 listings you open will leave it out.'}` : `"${label}" is no longer excluded.`);
-          b.reload.hidden = !(adding && kind && key === 'exclusions');
+          panelApi.after(adding, key, label);
           // Muting collapses this work under the pressed button: keep keyboard focus on the work.
           if (b.li.classList.contains('sift-collapsed')) b.barBtn.focus();
           else if (b.li.classList.contains('sift-removed')) ui.showAll.focus();
         });
         t.classList.add('sift-chip');
-        b.toggles.push({ t, key, label, pressedText, idleText });
-        return el('li', null, [el('span', 'sift-name', label), t]);
+        const box = key === 'exclusions'
+          ? el('input', 'sift-pick', null, { type: 'checkbox', 'aria-label': 'Select ' + label })
+          : null;
+        b.toggles.push({ t, key, label, pressedText, idleText, box });
+        return el('li', null, box ? [box, el('span', 'sift-name', label), t] : [el('span', 'sift-name', label), t]);
       };
       const section = (title, items) => [el('p', 'sift-label', title), el('ul', 'sift-list', items, { 'aria-label': title })];
+      const free = b.groups.find(g => g[0] === 'Additional tags')?.[1] || [];
       b.panel.append(
         ...section('Authors', b.users.length
           ? b.users.map(u => row(u, 'mutedAuthors', 'Muted', 'Mute'))
@@ -213,22 +348,39 @@ async function main(state) {
       b.status = el('p', 'sift-status', '', { 'aria-live': 'polite' });
       b.reload = button('Reload filtered', () => location.assign(L.withFilters(location.href, cfg, true)));
       b.reload.hidden = true;
-      b.panel.append(el('div', 'sift-row', [b.status, b.reload]));
+      const bulk = [];
+      const checked = () => b.toggles.filter(t => t.box?.checked).map(t => t.label);
+      bulk.push(button('Exclude checked', async () => {
+        const names = checked().filter(n => !has(cfg.exclusions, n));
+        const added = await excludeNames(names);
+        b.status.textContent = added.length
+          ? `Excluded ${added.length} ${added.length === 1 ? 'tag' : 'tags'}. ${kind ? 'Reload this listing to leave them out.' : 'AO3 listings you open will leave them out.'}`
+          : 'Those tags are already excluded.';
+        b.reload.hidden = !(added.length && kind);
+        for (const t of b.toggles) if (t.box) t.box.checked = false;
+      }));
+      if (free.length) {
+        bulk.push(button('Exclude all additional tags', async () => {
+          const added = await excludeNames(free);
+          b.status.textContent = added.length
+            ? `Excluded ${added.length} additional ${added.length === 1 ? 'tag' : 'tags'}. ${kind ? 'Reload this listing to leave them out.' : 'AO3 listings you open will leave them out.'}`
+            : 'Those additional tags are already excluded.';
+          b.reload.hidden = !(added.length && kind);
+        }));
+      }
+      b.panel.append(el('div', 'sift-actions', bulk), el('div', 'sift-row', [b.status, b.reload]));
       b.header.after(b.panel);
+      b.panelApi = wirePanel(b.panel, b.toggles, b.status, b.reload);
     }
+    const panelApi = b.panelApi;
     const open = btn.getAttribute('aria-expanded') !== 'true';
     btn.setAttribute('aria-expanded', String(open));
     b.panel.hidden = !open;
-    renderPanel(b);
+    panelApi.refresh();
   }
 
   function renderPanel(b) {
-    for (const { t, key, label, pressedText, idleText } of b.toggles) {
-      const on = has(cfg[key], label);
-      t.textContent = on ? pressedText : idleText;
-      t.setAttribute('aria-label', `${t.textContent} ${label}`);
-      t.setAttribute('aria-pressed', String(on));
-    }
+    b.panelApi?.refresh();
   }
 
   function saveShip(entry) {
@@ -236,7 +388,7 @@ async function main(state) {
     if (entry) ships.push(entry);
     cfg = { ...cfg, ships };
     render();
-    return chrome.storage.local.set({ ships });
+    return Store.saveSettings({ ships }).then(next => { cfg = next; });
   }
 
   function buildBar() {
@@ -265,11 +417,18 @@ async function main(state) {
         cfg = { ...cfg, kept };
         keptJustNow = true;
         render();
-        await chrome.storage.local.set({ kept });
+        cfg = await Store.saveSettings({ kept });
       });
       ui.keepRow = el('p', 'sift-row', [ui.keepText, ui.keep], { 'aria-live': 'polite' });
       bar.append(ui.keepRow);
     }
+
+    ui.rules = el('p', 'sift-row sift-note');
+    ui.sort = button('Sort this page by kudos per hit', () => {
+      Store.saveSettings({ browse: { sortByRatio: !cfg.browse.sortByRatio } });
+    });
+    ui.sortRow = el('p', 'sift-row', [ui.sort]);
+    bar.append(ui.rules, ui.sortRow);
 
     if (isShipPage) {
       const box = (label, onChange) => {
@@ -296,7 +455,110 @@ async function main(state) {
         'aria-label': 'Sift options for ' + (b.title || 'this work'),
       });
       b.header.append(btn);
+      if (b.id) {
+        b.laterBtn = button('Later', () => toggleLater({
+          id: b.id, title: b.title, authors: b.users, words: b.words,
+        }, b.laterBtn), { class: 'sift-btn sift-ui sift-later', 'aria-label': 'Save for later' });
+        b.header.append(b.laterBtn);
+      }
     }
+  }
+
+  function tagGroups(root) {
+    const take = (sel, title) => {
+      const names = [...new Set([...root.querySelectorAll(sel)].map(a => a.textContent.trim()).filter(Boolean))];
+      return names.length ? [title, names] : null;
+    };
+    return [
+      take('dd.warning.tags a.tag, dd.warning a.tag', 'Warnings'),
+      take('dd.fandom.tags a.tag, dd.fandom a.tag', 'Fandoms'),
+      take('dd.relationship.tags a.tag, dd.relationship a.tag', 'Relationships'),
+      take('dd.character.tags a.tag, dd.character a.tag', 'Characters'),
+      take('dd.freeform.tags a.tag, dd.freeform a.tag', 'Additional tags'),
+    ].filter(Boolean);
+  }
+
+  function renderWorkPage() {
+    if (!pageWorkId) return;
+    const host = document.querySelector('#main');
+    if (!host) return;
+    if (!workUi) {
+      const title = document.querySelector('#workskin h2.title, #main h2.title')?.textContent.trim()
+        || document.title.replace(/\s*\|.*$/, '').trim();
+      const users = [...new Set([...host.querySelectorAll('a[rel="author"]')]
+        .map(a => L.userFromHref(a.getAttribute('href'))).filter(Boolean))];
+      const groups = tagGroups(host);
+      const words = L.parseCount(document.querySelector('dd.words')?.textContent || '');
+      workUi = { toggles: [] };
+      workUi.bar = el('div', 'sift-ui sift-bar', null, { role: 'region', 'aria-label': 'Sift' });
+      workUi.later = button('Later', () => toggleLater({ id: pageWorkId, title, authors: users, words }, workUi.later), {
+        class: 'sift-btn sift-ui sift-later', 'aria-label': 'Save for later',
+      });
+      workUi.opened = el('span', 'sift-ui sift-badge sift-opened', 'Opened');
+      const openBtn = button('Sift', () => {
+        const open = openBtn.getAttribute('aria-expanded') !== 'true';
+        openBtn.setAttribute('aria-expanded', String(open));
+        workUi.panel.hidden = !open;
+        workUi.refresh();
+      }, {
+        class: 'sift-btn sift-ui sift-open', 'aria-expanded': 'false', 'aria-controls': 'sift-panel-work',
+        'aria-label': 'Sift options for this work',
+      });
+      workUi.panel = el('div', 'sift-ui sift-panel', null, {
+        id: 'sift-panel-work', role: 'group', 'aria-label': 'Sift options for this work', hidden: '',
+      });
+      const row = (label, key, pressedText, idleText) => {
+        const t = button(idleText, async () => {
+          const adding = !has(cfg[key], label);
+          await toggleName(key, label);
+          workUi.after(adding, key, label);
+        });
+        t.classList.add('sift-chip');
+        const box = key === 'exclusions'
+          ? el('input', 'sift-pick', null, { type: 'checkbox', 'aria-label': 'Select ' + label })
+          : null;
+        workUi.toggles.push({ t, key, label, pressedText, idleText, box });
+        return el('li', null, box ? [box, el('span', 'sift-name', label), t] : [el('span', 'sift-name', label), t]);
+      };
+      const section = (heading, items) => [el('p', 'sift-label', heading), el('ul', 'sift-list', items, { 'aria-label': heading })];
+      workUi.panel.append(
+        ...section('Authors', users.length
+          ? users.map(u => row(u, 'mutedAuthors', 'Muted', 'Mute'))
+          : [el('li', null, el('span', 'sift-name', 'No author link (anonymous or orphaned work)'))]),
+        ...groups.flatMap(([heading, tags]) => section(heading, tags.map(t => row(t, 'exclusions', 'Excluded', 'Exclude')))),
+      );
+      workUi.status = el('p', 'sift-status', '', { 'aria-live': 'polite' });
+      workUi.reload = button('Reload filtered', () => location.assign(L.withFilters(location.href, cfg, true)));
+      workUi.reload.hidden = true;
+      const wired = wirePanel(workUi.panel, workUi.toggles, workUi.status, workUi.reload);
+      workUi.refresh = wired.refresh;
+      workUi.after = wired.after;
+      const free = groups.find(g => g[0] === 'Additional tags')?.[1] || [];
+      const bulk = [button('Exclude checked', async () => {
+        const names = workUi.toggles.filter(t => t.box?.checked).map(t => t.label);
+        const added = await excludeNames(names);
+        workUi.status.textContent = added.length
+          ? `Excluded ${added.length} ${added.length === 1 ? 'tag' : 'tags'}. AO3 listings you open will leave them out.`
+          : 'Those tags are already excluded.';
+        for (const t of workUi.toggles) if (t.box) t.box.checked = false;
+      })];
+      if (free.length) {
+        bulk.push(button('Exclude all additional tags', async () => {
+          const added = await excludeNames(free);
+          workUi.status.textContent = added.length
+            ? `Excluded ${added.length} additional ${added.length === 1 ? 'tag' : 'tags'}. AO3 listings you open will leave them out.`
+            : 'Those additional tags are already excluded.';
+        }));
+      }
+      workUi.panel.append(el('div', 'sift-actions', bulk), el('div', 'sift-row', [workUi.status, workUi.reload]));
+      workUi.bar.append(el('p', 'sift-row', [el('strong', null, 'Sift'), workUi.later, workUi.opened, openBtn]), workUi.panel);
+      const skin = document.querySelector('#workskin');
+      if (skin) skin.before(workUi.bar);
+      else host.prepend(workUi.bar);
+    }
+    syncLaterButton(workUi.later, pageWorkId, '');
+    workUi.opened.hidden = !(cfg.browse.trackReads && readWorks[pageWorkId]);
+    workUi.refresh();
   }
 
   // The page's kept-able filters, with the language's name from AO3's own language menu.
@@ -333,6 +595,13 @@ async function main(state) {
         ? `This listing uses ${L.describeKept(fromUrl)}.`
         : 'Kept. Every AO3 listing you open now uses these filters; change them in Sift\'s options.';
     }
+    const rules = cfg.enabled ? L.describeBrowse(cfg.browse) : '';
+    ui.rules.hidden = !rules;
+    ui.rules.textContent = rules ? 'On this page: ' + rules + '.' : '';
+    const canSort = blurbs.some(b => L.kudosPerHit(b.kudos, b.hits) != null);
+    ui.sortRow.hidden = !canSort;
+    ui.sort.textContent = cfg.browse.sortByRatio ? "Back to AO3's order" : 'Sort this page by kudos per hit';
+    ui.sort.setAttribute('aria-pressed', String(Boolean(cfg.browse.sortByRatio)));
     if (ui.first) {
       ui.first.input.checked = Boolean(ship);
       ui.two.input.checked = Boolean(ship?.firstTwo);
@@ -370,12 +639,14 @@ async function main(state) {
   function render() {
     document.documentElement.classList.toggle('sift-off', !cfg.enabled);
     rewriteLinks();
+    renderWorkPage();
     if (!blurbs.length || unreadable) return;
     ship = cfg.enabled && isShipPage ? cfg.ships.find(s => L.norm(s.name) === shipKey) || null : null;
     if (ship && !shipNames) loadShipNames();
     if (!bar) buildBar();
     hiddenCount = 0;
     for (const b of blurbs) renderBlurb(b);
+    orderBlurbs();
     renderBar();
     state.hidden = hiddenCount;
     state.total = blurbs.length;
@@ -398,10 +669,25 @@ async function main(state) {
     if (card) showCard(card);
   }
 
-  chrome.storage.onChanged.addListener((changes, area) => {
-    if (area !== 'local' || !KEYS.some(k => k in changes)) return;
-    for (const k of KEYS) if (k in changes) cfg[k] = changes[k].newValue ?? L.DEFAULTS[k];
-    render();
+  Store.watch((changes, area) => {
+    if (area === 'sync') {
+      if (!cfg.syncEnabled) return;
+      Store.load().then(fresh => {
+        cfg = fresh.settings;
+        render();
+      }).catch(() => {});
+      return;
+    }
+    if (area !== 'local') return;
+    let dirty = false;
+    for (const k of L.SETTING_KEYS) if (k in changes) {
+      cfg[k] = changes[k].newValue ?? L.DEFAULTS[k];
+      dirty = true;
+    }
+    if (dirty) cfg = L.hydrate(cfg);
+    if ('readWorks' in changes) { readWorks = changes.readWorks.newValue || {}; dirty = true; }
+    if ('later' in changes) { later = L.cleanLater(changes.later.newValue || []); dirty = true; }
+    if (dirty) render();
   });
 
   state.unreadable = Boolean(unreadable);

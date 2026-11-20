@@ -12,7 +12,7 @@
     <img src="icons/icon128.png" width="56" height="56" alt="">
     <div>
       <h1>Sift for AO3</h1>
-      <p class="hint lede">Everything on this page stays in this browser. No account, no server, no tracking.</p>
+      <p class="hint lede">Lists stay in this browser. Turn on browser sync only if you want them on your other devices. No Sift account, no Sift server, no tracking.</p>
     </div>
   </header>
 
@@ -51,6 +51,47 @@
     <ul id="ships" class="names rows" aria-labelledby="h-ships"></ul>
   </section>
 
+  <section aria-labelledby="h-browse">
+    <h2 id="h-browse">On the page</h2>
+    <p>These run in the browser on the listing you are looking at, including bookmarks. They do not ask AO3 to refill the page, so a strict rule can leave a page short. Kept filters, above, are the ones AO3 applies for you.</p>
+    <p><label class="switch"><input type="checkbox" id="showRatio"><span class="track" aria-hidden="true"></span><span>Show kudos per hit on each work</span></label></p>
+    <p class="hint">A percentage of hits that left a kudos. It is a browsing hint, not a score, and it is not sent anywhere.</p>
+    <p><label class="switch"><input type="checkbox" id="showReadingTime"><span class="track" aria-hidden="true"></span><span>Show an estimated reading time</span></label></p>
+    <p><label class="switch"><input type="checkbox" id="sortByRatio"><span class="track" aria-hidden="true"></span><span>Sort each listing page by kudos per hit</span></label></p>
+    <p class="hint">Only the works already on that page are reordered. Later pages stay separate, because AO3 does not offer this sort.</p>
+    <p><label class="switch"><input type="checkbox" id="hideWip"><span class="track" aria-hidden="true"></span><span>Hide unfinished works</span></label></p>
+    <p><label class="switch"><input type="checkbox" id="hideRead"><span class="track" aria-hidden="true"></span><span>Hide works you have already opened</span></label></p>
+    <p><label class="switch"><input type="checkbox" id="trackReads"><span class="track" aria-hidden="true"></span><span>Remember works you open</span></label></p>
+    <p class="hint">Work ids stay on this device so listings can mark or hide them. Sift does not sync this list and does not record a work until you turn remembering on. <span id="read-count"></span></p>
+    <div class="fields">
+      <label>At least <input id="wordsFrom" inputmode="numeric" autocomplete="off" aria-label="Hide works under this many words"> words</label>
+      <label>At most <input id="wordsTo" inputmode="numeric" autocomplete="off" aria-label="Hide works over this many words"> words</label>
+      <label>Hide if not updated in <input id="staleDays" inputmode="numeric" autocomplete="off" aria-label="Hide works not updated in this many days"> days</label>
+      <label>Highlight updates from the last <input id="freshDays" inputmode="numeric" autocomplete="off" aria-label="Highlight works updated within this many days"> days</label>
+      <label>Reading speed <input id="wpm" inputmode="numeric" autocomplete="off" aria-label="Reading speed in words per minute"> words per minute</label>
+    </div>
+    <p><button type="button" id="clear-reads">Clear opened works</button></p>
+  </section>
+
+  <section aria-labelledby="h-presets">
+    <h2 id="h-presets">Presets</h2>
+    <p>Save the exclusions, muted authors, ships, kept filters, and on-the-page rules you have now. Applying a preset replaces those lists. It does not delete opened works or saved-for-later.</p>
+    <ul id="presets" class="names rows" aria-labelledby="h-presets"></ul>
+    <form class="add" id="preset-form">
+      <label for="preset-name">Name this setup</label>
+      <input id="preset-name" maxlength="60" required placeholder="For example, Keldra, no angst">
+      <button type="submit" class="primary">Save preset</button>
+      <p class="status hint" id="preset-status" role="status"></p>
+    </form>
+  </section>
+
+  <section aria-labelledby="h-later">
+    <h2 id="h-later">Saved for later</h2>
+    <p>A private list on this device, for works you are not ready to bookmark on AO3. Mark one with Later on a work or a listing.</p>
+    <ul id="later" class="names rows" aria-labelledby="h-later"></ul>
+    <p><button type="button" id="clear-later">Clear saved for later</button></p>
+  </section>
+
   <section aria-labelledby="h-behaviour">
     <h2 id="h-behaviour">Behaviour</h2>
     <p><label class="switch"><input type="checkbox" id="autoApply"><span class="track" aria-hidden="true"></span><span>Always apply my saved filters automatically</span></label></p>
@@ -61,7 +102,10 @@
 
   <section aria-labelledby="h-backup">
     <h2 id="h-backup">Back up and move</h2>
-    <p>Export saves your lists and settings as a JSON file. Import adds a backup to what you already have; it never removes anything.</p>
+    <p><label class="switch"><input type="checkbox" id="syncEnabled"><span class="track" aria-hidden="true"></span><span>Sync lists across browsers signed into the same account</span></label></p>
+    <p class="hint">Uses the browser’s own sync, not a server Sift runs. Exclusions, muted authors, ships, kept filters, presets, and on-the-page rules are included. Opened works and saved-for-later stay on this device. Turning this off deletes the synced copy.</p>
+    <p class="status hint" id="sync-status" role="status"></p>
+    <p>Export saves your lists and settings as a JSON file. Import adds a backup to what you already have; it never removes anything. A backup does not turn sync on.</p>
     <p class="row">
       <button type="button" id="export" class="primary">Export JSON</button>
       <button type="button" id="import-button">Import JSON</button>
@@ -73,6 +117,7 @@
 </main>
 <footer><a href="https://ko-fi.com/jju1s" target="_blank" rel="noopener noreferrer">Support on Ko-fi</a></footer>
 <script src="lib/sift.js"></script>
+<script src="lib/storage.js"></script>
 <script src="options.js"></script>
 </body>
 </html>
